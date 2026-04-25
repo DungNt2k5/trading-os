@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useAppStore, Page, parseMeta } from "@/store/useAppStore";
 import { applyFilters, FilterGroup } from "@/components/filters/FilterBuilder";
 import FilterBuilder from "@/components/filters/FilterBuilder";
@@ -10,10 +10,9 @@ import {
   DollarSign,
   TrendingUp,
   TrendingDown,
-  Tag,
 } from "lucide-react";
 
-// ── Config ────────────────────────────────────────────────────────────────────
+// ── Config: chỉ 3 trạng thái ─────────────────────────────────────────────────
 
 const COLUMNS = [
   { id: "active", label: "Active", color: "#00ff9f" },
@@ -62,7 +61,6 @@ function KanbanCard({
         userSelect: "none",
       }}
     >
-      {/* Title */}
       <div
         style={{
           fontSize: 13,
@@ -75,7 +73,6 @@ function KanbanCard({
         {page.title || "Untitled"}
       </div>
 
-      {/* Trading card badges */}
       {sectionType === "trading" && (
         <div
           style={{
@@ -158,7 +155,6 @@ function KanbanCard({
         </div>
       )}
 
-      {/* Expense card */}
       {sectionType === "expense" &&
         page.amount !== null &&
         page.amount !== undefined && (
@@ -195,9 +191,10 @@ function KanbanCard({
           </div>
         )}
 
-      {/* Tags */}
       {page.tags && page.tags.length > 0 && (
-        <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+        <div
+          style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 6 }}
+        >
           {page.tags.slice(0, 3).map((pt) => (
             <span
               key={pt.tagId}
@@ -216,9 +213,8 @@ function KanbanCard({
         </div>
       )}
 
-      {/* Footer */}
       <div
-        style={{ marginTop: 8, fontSize: 9, color: "rgba(255,255,255,0.18)" }}
+        style={{ marginTop: 6, fontSize: 9, color: "rgba(255,255,255,0.18)" }}
       >
         {new Date(page.updatedAt).toLocaleDateString("vi-VN")}
       </div>
@@ -253,8 +249,13 @@ export default function KanbanView() {
   const filtered = applyFilters(sectionPages, filterGroup);
 
   const handleDrop = async (status: string) => {
-    if (!dragging || dragging === status) return;
+    if (!dragging) return;
     setDragOver(null);
+    const page = pages.find((p) => p.id === dragging);
+    if (page?.status === status) {
+      setDragging(null);
+      return;
+    }
 
     const res = await fetch(`/api/pages/${dragging}`, {
       method: "PATCH",
@@ -458,7 +459,7 @@ export default function KanbanView() {
                 style={{
                   flex: 1,
                   overflowY: "auto",
-                  padding: "10px 10px",
+                  padding: "10px",
                   display: "flex",
                   flexDirection: "column",
                   gap: 8,
@@ -474,7 +475,6 @@ export default function KanbanView() {
                     onClick={() => setActivePageId(page.id)}
                   />
                 ))}
-
                 {colPages.length === 0 && (
                   <div
                     style={{

@@ -17,7 +17,8 @@
         "height": 900,
         "resizable": true,
         "fullscreen": false,
-        "center": true
+        "center": true,
+        "devtools": true
       }
     ],
     "security": {
@@ -34,12 +35,7 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": [
-      "../.next/standalone/**/*",
-      "../.next/static/**/*",
-      "../public/**/*",
-      "../prisma/**/*"
-    ],
+    "resources": ["../.next/standalone/**/*", "../prisma/**/*"],
     "externalBin": ["binaries/node"]
   }
 }

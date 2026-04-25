@@ -28,7 +28,7 @@ interface ExpensePage {
   createdAt: string;
 }
 
-// ── Neon colours cho category bars ───────────────────────────────────────────
+// ── Neon colours ──────────────────────────────────────────────────────────────
 const BAR_COLORS = [
   "#a855f7",
   "#22d3ee",
@@ -41,12 +41,99 @@ const BAR_COLORS = [
 ];
 
 // ── Custom Tooltip ────────────────────────────────────────────────────────────
-function CustomTooltip({ active, payload, label }: any) {
+function CustomTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: { value: number }[];
+  label?: string;
+}) {
   if (active && payload?.length) {
     return (
-      <div className="bg-black/85 border border-pink-500/25 rounded-lg px-3 py-2 text-xs">
-        <p className="text-white/40 mb-0.5">{label}</p>
-        <p className="text-pink-400 font-semibold">
+      <div
+        style={{
+          background: "rgba(5,5,12,0.97)",
+          border: "0.5px solid rgba(244,114,182,0.3)",
+          borderRadius: 10,
+          padding: "8px 14px",
+          boxShadow:
+            "0 0 20px rgba(244,114,182,0.15), 0 8px 32px rgba(0,0,0,0.8)",
+          backdropFilter: "blur(12px)",
+          minWidth: 120,
+        }}
+      >
+        {label && (
+          <p
+            style={{
+              fontSize: 10,
+              color: "rgba(255,255,255,0.35)",
+              marginBottom: 4,
+              letterSpacing: "0.06em",
+            }}
+          >
+            {label}
+          </p>
+        )}
+        <p
+          style={{
+            fontSize: 13,
+            fontWeight: 700,
+            fontFamily: "monospace",
+            color: "#f472b6",
+          }}
+        >
+          ${Number(payload[0]?.value ?? 0).toFixed(2)}
+        </p>
+      </div>
+    );
+  }
+  return null;
+}
+
+// ── Category Tooltip ──────────────────────────────────────────────────────────
+function CategoryTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: { value: number; payload: { color?: string } }[];
+  label?: string;
+}) {
+  if (active && payload?.length) {
+    const color = payload[0]?.payload?.color ?? "#a855f7";
+    return (
+      <div
+        style={{
+          background: "rgba(5,5,12,0.97)",
+          border: `0.5px solid ${color}40`,
+          borderRadius: 10,
+          padding: "8px 14px",
+          boxShadow: `0 0 20px ${color}20, 0 8px 32px rgba(0,0,0,0.8)`,
+          backdropFilter: "blur(12px)",
+        }}
+      >
+        {label && (
+          <p
+            style={{
+              fontSize: 10,
+              color: "rgba(255,255,255,0.35)",
+              marginBottom: 4,
+            }}
+          >
+            {label}
+          </p>
+        )}
+        <p
+          style={{
+            fontSize: 13,
+            fontWeight: 700,
+            fontFamily: "monospace",
+            color,
+          }}
+        >
           ${Number(payload[0]?.value ?? 0).toFixed(2)}
         </p>
       </div>
@@ -89,7 +176,7 @@ function StatCard({
   );
 }
 
-// ── Main ─────────────────────────────────────────────────────────────────────
+// ── Main ──────────────────────────────────────────────────────────────────────
 export default function ExpenseDashboard() {
   const { activeSectionId, pages } = useAppStore();
   const [expenses, setExpenses] = useState<ExpensePage[]>([]);
@@ -105,8 +192,6 @@ export default function ExpenseDashboard() {
 
   const total = expenses.reduce((s, e) => s + (e.amount ?? 0), 0);
   const avg = expenses.length > 0 ? total / expenses.length : 0;
-  const topAmt =
-    expenses.length > 0 ? Math.max(...expenses.map((e) => e.amount ?? 0)) : 0;
 
   // Group by category
   const byCategory = expenses.reduce<Record<string, number>>((acc, e) => {
@@ -115,7 +200,11 @@ export default function ExpenseDashboard() {
     return acc;
   }, {});
   const categoryData = Object.entries(byCategory)
-    .map(([name, value]) => ({ name, value }))
+    .map(([name, value], i) => ({
+      name,
+      value,
+      color: BAR_COLORS[i % BAR_COLORS.length],
+    }))
     .sort((a, b) => b.value - a.value);
 
   // Group by day
@@ -176,78 +265,128 @@ export default function ExpenseDashboard() {
         </div>
       ) : (
         <>
-          {/* Chi tiêu theo ngày */}
+          {/* ── Chi tiêu theo ngày ── */}
           <div className="p-5 rounded-xl border border-pink-500/20 bg-black/40 backdrop-blur-sm">
             <h3 className="text-sm font-semibold text-pink-400 mb-4 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-pink-400 shadow-[0_0_8px_rgba(244,114,182,0.8)]" />
               Chi tiêu theo ngày
             </h3>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={dayData}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="rgba(255,255,255,0.05)"
-                />
-                <XAxis
-                  dataKey="name"
-                  tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }}
-                />
-                <YAxis tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar
-                  dataKey="value"
-                  radius={[4, 4, 0, 0]}
-                  fill="#ec4899"
-                  style={{
-                    filter: "drop-shadow(0 0 4px rgba(244,114,182,0.5))",
-                  }}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+            <div style={{ height: 200, minWidth: 0 }}>
+              <ResponsiveContainer
+                width="100%"
+                height="100%"
+                minWidth={0}
+                debounce={50}
+              >
+                <BarChart data={dayData} style={{ cursor: "default" }}>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="rgba(255,255,255,0.05)"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    content={<CustomTooltip />}
+                    cursor={{ fill: "rgba(255,255,255,0.03)", stroke: "none" }}
+                  />
+                  <Bar
+                    dataKey="value"
+                    radius={[4, 4, 0, 0]}
+                    fill="#ec4899"
+                    style={{
+                      filter: "drop-shadow(0 0 4px rgba(244,114,182,0.5))",
+                    }}
+                    background={false}
+                    activeBar={{
+                      fill: "#ec4899",
+                      fillOpacity: 1,
+                      stroke: "none",
+                      filter: "drop-shadow(0 0 8px rgba(244,114,182,0.85))",
+                    }}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
-          {/* Chi tiêu theo danh mục */}
+          {/* ── Chi tiêu theo danh mục ── */}
           <div className="p-5 rounded-xl border border-purple-500/20 bg-black/40 backdrop-blur-sm">
             <h3 className="text-sm font-semibold text-purple-400 mb-4 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
               Chi tiêu theo danh mục
             </h3>
-            <ResponsiveContainer
-              width="100%"
-              height={Math.max(180, categoryData.length * 40)}
+            <div
+              style={{
+                height: Math.max(180, categoryData.length * 40),
+                minWidth: 0,
+              }}
             >
-              <BarChart data={categoryData} layout="vertical">
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="rgba(255,255,255,0.05)"
-                />
-                <XAxis
-                  type="number"
-                  tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }}
-                />
-                <YAxis
-                  dataKey="name"
-                  type="category"
-                  tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }}
-                  width={72}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                  {categoryData.map((_, i) => (
-                    <Cell
-                      key={i}
-                      fill={BAR_COLORS[i % BAR_COLORS.length]}
-                      style={{
-                        filter: `drop-shadow(0 0 4px ${BAR_COLORS[i % BAR_COLORS.length]}80)`,
-                      }}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+              <ResponsiveContainer
+                width="100%"
+                height="100%"
+                minWidth={0}
+                debounce={50}
+              >
+                <BarChart
+                  data={categoryData}
+                  layout="vertical"
+                  style={{ cursor: "default" }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="rgba(255,255,255,0.05)"
+                    horizontal={false}
+                  />
+                  <XAxis
+                    type="number"
+                    tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    dataKey="name"
+                    type="category"
+                    tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }}
+                    width={72}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    content={<CategoryTooltip />}
+                    cursor={{ fill: "rgba(255,255,255,0.03)", stroke: "none" }}
+                  />
+                  <Bar
+                    dataKey="value"
+                    radius={[0, 4, 4, 0]}
+                    background={false}
+                    activeBar={{ fillOpacity: 1, stroke: "none" }}
+                  >
+                    {categoryData.map((entry, i) => (
+                      <Cell
+                        key={i}
+                        fill={entry.color}
+                        style={{
+                          filter: `drop-shadow(0 0 4px ${entry.color}80)`,
+                        }}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
-          {/* Recent expenses — glass table */}
+          {/* ── Recent expenses — glass table ── */}
           <div className="rounded-xl border border-white/10 bg-black/40 backdrop-blur-sm overflow-hidden">
             <div className="px-5 py-3 border-b border-white/[0.06] flex items-center gap-2">
               <Tag size={13} className="text-white/30" />
@@ -284,10 +423,7 @@ export default function ExpenseDashboard() {
                       <td className="px-5 py-3 text-white/70">{e.title}</td>
                       <td className="px-5 py-3">
                         {e.category ? (
-                          <span
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium
-                          bg-purple-500/10 text-purple-400 border border-purple-500/20"
-                          >
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20">
                             {e.category}
                           </span>
                         ) : (

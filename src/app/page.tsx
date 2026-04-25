@@ -9,6 +9,8 @@ import TableView from "@/components/views/TableView";
 import KanbanView from "@/components/views/KanbanView";
 import CalendarView from "@/components/views/CalendarView";
 import GalleryView from "@/components/views/GalleryView";
+import FinanceDashboard from "@/components/FinanceDashboard";
+
 import {
   Zap,
   CandlestickChart,
@@ -35,7 +37,7 @@ const VIEW_TABS: { id: ViewMode; label: string; icon: React.ReactNode }[] = [
 ];
 
 // Sections that have a meaningful "dashboard" view
-const HAS_DASHBOARD = ["trading", "expense"];
+const HAS_DASHBOARD = ["trading", "expense", "finance"];
 
 function ViewSwitcher({
   active,
@@ -186,6 +188,8 @@ export default function Home() {
       case "dashboard":
         if (sectionType === "trading") return <TradingDashboard />;
         if (sectionType === "expense") return <ExpenseDashboard />;
+        if (sectionType === "finance")
+          return <FinanceDashboard sectionId={activeSectionId!} />;
         return <TableView />;
       case "table":
         return <TableView />;

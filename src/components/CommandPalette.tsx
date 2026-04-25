@@ -11,6 +11,8 @@ import {
   Clock3,
   Search,
   Zap,
+  Copy,
+  LayoutGrid,
 } from "lucide-react";
 
 const RECENT_KEY = "command_palette_recent_pages";
@@ -40,6 +42,7 @@ export default function CommandPalette() {
     setActivePageId,
     addPage,
     updatePage,
+    updateSection,
     removePage,
   } = useAppStore();
 
@@ -109,6 +112,11 @@ export default function CommandPalette() {
     [apiPages, activePageId],
   );
 
+  const activeSection = useMemo(
+    () => sections.find((s) => s.id === activeSectionId) ?? null,
+    [sections, activeSectionId],
+  );
+
   const gotoPage = useCallback(
     (page: Page) => {
       setActiveSectionId(page.sectionId);
@@ -124,7 +132,11 @@ export default function CommandPalette() {
     const res = await fetch("/api/pages", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: "Untitled", content: "", sectionId: activeSectionId }),
+      body: JSON.stringify({
+        title: "Untitled",
+        content: "",
+        sectionId: activeSectionId,
+      }),
     });
     const page: Page = await res.json();
     addPage(page);
@@ -166,6 +178,37 @@ export default function CommandPalette() {
     [activePageId, close, removePage, setActivePageId],
   );
 
+  const duplicatePage = useCallback(
+    async (page: Page) => {
+      const res = await fetch(`/api/pages/${page.id}?action=duplicate`, {
+        method: "POST",
+      });
+      if (!res.ok) return;
+      const copy: Page = await res.json();
+      addPage(copy);
+      setApiPages((prev) => [copy, ...prev]);
+      gotoPage(copy);
+    },
+    [addPage, gotoPage],
+  );
+
+  const renameSection = useCallback(async () => {
+    if (!activeSection) return;
+    const newName = window.prompt("Rename section:", activeSection.name);
+    if (!newName?.trim() || newName.trim() === activeSection.name) {
+      close();
+      return;
+    }
+    const res = await fetch(`/api/sections/${activeSection.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: newName.trim() }),
+    });
+    const updated = await res.json();
+    updateSection(activeSection.id, { name: updated.name });
+    close();
+  }, [activeSection, close, updateSection]);
+
   if (!open) return null;
 
   return (
@@ -183,9 +226,12 @@ export default function CommandPalette() {
           <Command.Input
             value={query}
             onValueChange={setQuery}
-            placeholder="Search pages from API, recent, actions..."
+            placeholder="Search pages, actions..."
             className="w-full bg-transparent text-sm text-white/85 outline-none placeholder:text-white/30"
           />
+          <kbd className="text-[10px] text-white/20 border border-white/10 rounded px-1.5 py-0.5 font-mono">
+            ESC
+          </kbd>
         </div>
 
         <Command.List className="max-h-[60vh] overflow-y-auto py-2">
@@ -193,6 +239,7 @@ export default function CommandPalette() {
             {loading ? "Loading..." : "No results"}
           </Command.Empty>
 
+          {/* Actions */}
           <Command.Group heading="Actions" className="px-2 text-white/40">
             <Command.Item
               value="action-new-page"
@@ -202,7 +249,40 @@ export default function CommandPalette() {
             >
               <Plus size={14} className="text-cyan-400" />
               <span>New page</span>
+              {activeSectionId && (
+                <span className="ml-auto text-xs text-white/25">
+                  in {activeSection?.name}
+                </span>
+              )}
             </Command.Item>
+
+            <Command.Item
+              value="action-new-section"
+              keywords={["new", "section", "create"]}
+              onSelect={() => {
+                close();
+                window.dispatchEvent(new CustomEvent("open-create-section"));
+              }}
+              className="mx-1 flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm data-[selected=true]:bg-white/10"
+            >
+              <Zap size={14} className="text-yellow-400" />
+              <span>New section</span>
+            </Command.Item>
+
+            {activeSection && (
+              <Command.Item
+                value={`action-rename-section-${activeSection.id}`}
+                keywords={["rename", "section"]}
+                onSelect={() => void renameSection()}
+                className="mx-1 flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm data-[selected=true]:bg-white/10"
+              >
+                <LayoutGrid size={14} className="text-purple-400" />
+                <span>Rename section</span>
+                <span className="ml-auto text-xs text-white/25">
+                  {activeSection.name}
+                </span>
+              </Command.Item>
+            )}
 
             {activePage && (
               <>
@@ -216,6 +296,15 @@ export default function CommandPalette() {
                   <span>Rename current page</span>
                 </Command.Item>
                 <Command.Item
+                  value={`action-duplicate-${activePage.id}`}
+                  keywords={["duplicate", "copy", "page"]}
+                  onSelect={() => void duplicatePage(activePage)}
+                  className="mx-1 flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm data-[selected=true]:bg-white/10"
+                >
+                  <Copy size={14} className="text-cyan-400" />
+                  <span>Duplicate current page</span>
+                </Command.Item>
+                <Command.Item
                   value={`action-delete-${activePage.id}`}
                   keywords={["delete", "remove", "page"]}
                   onSelect={() => void deletePage(activePage)}
@@ -226,26 +315,18 @@ export default function CommandPalette() {
                 </Command.Item>
               </>
             )}
-
-            <Command.Item
-              value="action-new-section"
-              keywords={["new", "section"]}
-              onSelect={() => {
-                close();
-                window.dispatchEvent(new CustomEvent("open-create-section"));
-              }}
-              className="mx-1 flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm data-[selected=true]:bg-white/10"
-            >
-              <Zap size={14} className="text-yellow-400" />
-              <span>New section</span>
-            </Command.Item>
           </Command.Group>
 
+          {/* Recent pages */}
           {recentPages.length > 0 && (
-            <Command.Group heading="Recent pages" className="px-2 text-white/40">
+            <Command.Group
+              heading="Recent pages"
+              className="px-2 text-white/40"
+            >
               {recentPages.map((page) => {
                 const sectionName =
-                  sections.find((s) => s.id === page.sectionId)?.name ?? "Unknown section";
+                  sections.find((s) => s.id === page.sectionId)?.name ??
+                  "Unknown";
                 return (
                   <Command.Item
                     key={`recent-${page.id}`}
@@ -256,28 +337,39 @@ export default function CommandPalette() {
                   >
                     <Clock3 size={13} className="text-white/40" />
                     <span className="truncate">{page.title || "Untitled"}</span>
-                    <span className="ml-auto truncate text-xs text-white/35">{sectionName}</span>
+                    <span className="ml-auto truncate text-xs text-white/35">
+                      {sectionName}
+                    </span>
                   </Command.Item>
                 );
               })}
             </Command.Group>
           )}
 
-          <Command.Group heading="Pages (API)" className="px-2 text-white/40">
+          {/* All pages */}
+          <Command.Group heading="Pages" className="px-2 text-white/40">
             {apiPages.map((page) => {
               const sectionName =
-                sections.find((s) => s.id === page.sectionId)?.name ?? "Unknown section";
+                sections.find((s) => s.id === page.sectionId)?.name ??
+                "Unknown";
               return (
                 <Command.Item
                   key={page.id}
                   value={`${page.title}-${sectionName}`}
-                  keywords={[page.title, sectionName, page.status]}
+                  keywords={[
+                    page.title,
+                    sectionName,
+                    page.status,
+                    page.category ?? "",
+                  ]}
                   onSelect={() => gotoPage(page)}
                   className="mx-1 flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm data-[selected=true]:bg-white/10"
                 >
                   <FileText size={13} className="text-white/45" />
                   <span className="truncate">{page.title || "Untitled"}</span>
-                  <span className="ml-auto truncate text-xs text-white/35">{sectionName}</span>
+                  <span className="ml-auto truncate text-xs text-white/35">
+                    {sectionName}
+                  </span>
                 </Command.Item>
               );
             })}

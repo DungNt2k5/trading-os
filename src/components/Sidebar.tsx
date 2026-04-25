@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import {
   Plus,
   Trash2,
+  Pencil,
   CandlestickChart,
   Landmark,
   StickyNote,
@@ -16,9 +17,10 @@ import {
   ChevronRight,
   Sun,
   Moon,
+  TrendingUp,
 } from "lucide-react";
 
-// ── Type config — old colors, new rail/activeClass fields ─────────────────────
+// ── Type config ───────────────────────────────────────────────────────────────
 const typeConfig: Record<
   string,
   {
@@ -63,6 +65,17 @@ const typeConfig: Record<
     label: "General",
     desc: "Ghi chú, tài liệu",
   },
+  finance: {
+    icon: <TrendingUp size={14} className="text-emerald-400" />,
+    dotColor: "bg-emerald-400",
+    dotShadow: "shadow-[0_0_6px_2px_rgba(52,211,153,0.7)]",
+    railColor:
+      "bg-gradient-to-b from-transparent via-emerald-400 to-transparent",
+    activeClass: "sidebar-item active active-finance",
+    glow: "rgba(52,211,153,0.15)",
+    label: "Finance",
+    desc: "Lãi lỗ, email, sự kiện",
+  },
   custom: {
     icon: <LayoutGrid size={14} className="text-yellow-400" />,
     dotColor: "bg-yellow-400",
@@ -78,9 +91,8 @@ const typeConfig: Record<
 
 const fallback = typeConfig.general;
 
-// ── GlowDot — new dual-ring version ──────────────────────────────────────────
+// ── GlowDot ───────────────────────────────────────────────────────────────────
 function GlowDot({ cfg }: { cfg: (typeof typeConfig)[string] }) {
-  // Derive border color from dotColor class name
   const ringColor = cfg.dotColor.includes("cyan")
     ? "rgba(34,211,238,0.6)"
     : cfg.dotColor.includes("pink")
@@ -94,17 +106,14 @@ function GlowDot({ cfg }: { cfg: (typeof typeConfig)[string] }) {
       className="glow-dot-wrap flex-shrink-0"
       style={{ position: "relative", width: 8, height: 8 }}
     >
-      {/* Ring 1 */}
       <span
         className="glow-dot-ring absolute inset-0 rounded-full border border-current opacity-0"
         style={{ color: ringColor }}
       />
-      {/* Ring 2 — delayed */}
       <span
         className="glow-dot-ring2 absolute inset-0 rounded-full border border-current opacity-0"
         style={{ color: ringColor }}
       />
-      {/* Core dot */}
       <span
         className={cn(
           "glow-dot-core absolute rounded-full",
@@ -117,7 +126,51 @@ function GlowDot({ cfg }: { cfg: (typeof typeConfig)[string] }) {
   );
 }
 
-// ── Create Section Dialog — old layout, new dialog-panel / btn-neon-cyan ──────
+// ── Inline rename input ───────────────────────────────────────────────────────
+function InlineRename({
+  initialValue,
+  onConfirm,
+  onCancel,
+}: {
+  initialValue: string;
+  onConfirm: (v: string) => void;
+  onCancel: () => void;
+}) {
+  const [val, setVal] = useState(initialValue);
+
+  return (
+    <input
+      autoFocus
+      value={val}
+      onChange={(e) => setVal(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          if (val.trim()) onConfirm(val.trim());
+        }
+        if (e.key === "Escape") onCancel();
+      }}
+      onBlur={() => {
+        if (val.trim() && val.trim() !== initialValue) onConfirm(val.trim());
+        else onCancel();
+      }}
+      onClick={(e) => e.stopPropagation()}
+      style={{
+        flex: 1,
+        background: "rgba(255,255,255,0.06)",
+        border: "0.5px solid rgba(34,211,238,0.35)",
+        borderRadius: 5,
+        color: "rgba(255,255,255,0.85)",
+        fontSize: 13,
+        padding: "1px 6px",
+        outline: "none",
+        minWidth: 0,
+      }}
+    />
+  );
+}
+
+// ── Create Section Dialog ─────────────────────────────────────────────────────
 function CreateSectionDialog({
   open,
   onClose,
@@ -145,9 +198,7 @@ function CreateSectionDialog({
       style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      {/* Old size/padding, new dialog-panel class for glass effect */}
       <div className="w-[340px] rounded-2xl p-5 flex flex-col gap-4 dialog-panel">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-semibold text-white/90">
@@ -165,7 +216,6 @@ function CreateSectionDialog({
           </button>
         </div>
 
-        {/* Name input */}
         <div className="flex flex-col gap-1.5">
           <label className="text-[10px] text-white/30 uppercase tracking-widest font-medium">
             Tên section
@@ -180,7 +230,6 @@ function CreateSectionDialog({
           />
         </div>
 
-        {/* Type selector — old active style */}
         <div className="flex flex-col gap-1.5">
           <label className="text-[10px] text-white/30 uppercase tracking-widest font-medium">
             Loại section
@@ -225,7 +274,6 @@ function CreateSectionDialog({
           </div>
         </div>
 
-        {/* Buttons — new btn-neon-cyan on confirm */}
         <div className="flex gap-2 pt-1">
           <button
             onClick={onClose}
@@ -259,24 +307,28 @@ export default function Sidebar() {
     setSections,
     setActiveSectionId,
     removeSection,
+    updateSection,
   } = useAppStore();
 
   const [dialogOpen, setDialogOpen] = useState(false);
-  // Old: localStorage collapse
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem("sidebar_collapsed") === "true";
-  });
-  // Old: theme toggle
-  const [theme, setTheme] = useState<"dark" | "light">(() => {
-    if (typeof window === "undefined") return "dark";
-    return (localStorage.getItem("theme") as "dark" | "light") ?? "dark";
-  });
-
-  // New: track rendered ids for entrance stagger
+  const [collapsed, setCollapsed] = useState(false);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renderedIds, setRenderedIds] = useState<Set<string>>(new Set());
 
-  // Apply theme
+  useEffect(() => {
+    const storedCollapsed = localStorage.getItem("sidebar_collapsed");
+    if (storedCollapsed === "true") setCollapsed(true);
+  }, []);
+
+  useEffect(() => {
+    const storedTheme = localStorage.getItem("theme") as
+      | "dark"
+      | "light"
+      | null;
+    if (storedTheme) setTheme(storedTheme);
+  }, []);
+
   useEffect(() => {
     const root = document.documentElement;
     if (theme === "light") {
@@ -289,7 +341,6 @@ export default function Sidebar() {
     localStorage.setItem("theme", theme);
   }, [theme]);
 
-  // New: update renderedIds when sections load
   useEffect(() => {
     setRenderedIds((prev) => {
       const next = new Set(prev);
@@ -339,36 +390,49 @@ export default function Sidebar() {
     if (activeSectionId === id) setActiveSectionId(null);
   };
 
+  const handleRename = async (id: string, newName: string) => {
+    setRenamingId(null);
+    if (!newName.trim()) return;
+    const res = await fetch(`/api/sections/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: newName.trim() }),
+    });
+    const updated = await res.json();
+    updateSection(id, { name: updated.name });
+  };
+
   return (
     <>
       <aside
         className={cn(
-          // Old base background
           "relative h-screen flex flex-col bg-black/40 border-r border-white/10 backdrop-blur-xl transition-all duration-300 ease-in-out flex-shrink-0",
           collapsed ? "w-14" : "w-64",
         )}
       >
-        {/* New: neon edge wire */}
         <span className="sidebar-edge-wire" aria-hidden />
 
-        {/* ── Logo / Header — old layout, new logo-sigil box ── */}
+        {/* ── Header ── */}
         <div
           className={cn(
             "border-b border-white/10 flex items-center",
             collapsed
-              ? "px-0 py-4 justify-center"
-              : "px-5 py-4 justify-between",
+              ? "px-0 py-3 justify-center"
+              : "px-4 py-3 justify-between",
           )}
         >
           {!collapsed ? (
+            /* === LOGO: sidebar mở rộng === */
             <div className="flex items-center gap-2.5 min-w-0">
-              {/* New: logo-sigil box */}
-              <div className="logo-sigil">
-                <span className="text-[16px] leading-none relative z-10">
-                  ⚡
-                </span>
-              </div>
-              {/* Old: gradient title text (no glitch animation) */}
+              <img
+                src="/221617.gif"
+                alt="logo"
+                className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+                style={{
+                  boxShadow:
+                    "0 0 12px rgba(34,211,238,0.35), 0 0 24px rgba(168,85,247,0.2)",
+                }}
+              />
               <div className="min-w-0">
                 <h1 className="text-lg font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent leading-tight">
                   Personal OS
@@ -379,14 +443,20 @@ export default function Sidebar() {
               </div>
             </div>
           ) : (
-            /* Collapsed: sigil only */
-            <div className="logo-sigil w-8 h-8">
-              <span className="text-[14px] leading-none relative z-10">⚡</span>
-            </div>
+            /* === LOGO: sidebar thu nhỏ === */
+            <img
+              src="/221617.gif"
+              alt="logo"
+              className="w-8 h-8 rounded-lg object-cover"
+              style={{
+                boxShadow:
+                  "0 0 10px rgba(34,211,238,0.3), 0 0 20px rgba(168,85,247,0.15)",
+              }}
+            />
           )}
         </div>
 
-        {/* ── Collapse toggle — old style ── */}
+        {/* Collapse toggle */}
         <button
           onClick={toggleCollapse}
           className={cn(
@@ -400,7 +470,7 @@ export default function Sidebar() {
           {collapsed ? <ChevronRight size={11} /> : <ChevronLeft size={11} />}
         </button>
 
-        {/* ── Sections nav ── */}
+        {/* Sections nav */}
         <nav className="flex-1 overflow-y-auto py-3 space-y-1 px-2">
           {sections.length === 0 && !collapsed && (
             <p className="text-[11px] text-white/20 text-center mt-8 px-4 leading-relaxed">
@@ -412,33 +482,30 @@ export default function Sidebar() {
             const cfg = typeConfig[sec.type] ?? fallback;
             const isActive = activeSectionId === sec.id;
             const isNew = !renderedIds.has(sec.id);
+            const isRenaming = renamingId === sec.id;
 
             return (
               <div
                 key={sec.id}
-                onClick={() => setActiveSectionId(sec.id)}
+                onClick={() => !isRenaming && setActiveSectionId(sec.id)}
                 title={collapsed ? sec.name : undefined}
                 className={cn(
                   "group flex items-center justify-between rounded-lg cursor-pointer transition-all duration-200 border",
                   collapsed ? "px-0 py-2 justify-center" : "px-3 py-2",
-                  // New activeClass for fiber/rail effects; old fallback hover
                   isActive
                     ? cfg.activeClass
                     : "hover:bg-white/5 border-transparent",
                 )}
                 style={{
-                  // Old: glow background on active
                   ...(isActive
                     ? {
                         background: cfg.glow,
                         boxShadow: `0 0 14px ${cfg.glow}, inset 0 0 8px ${cfg.glow}`,
                       }
                     : {}),
-                  // New: stagger delay for entrance
                   animationDelay: isNew ? "0ms" : `${i * 50}ms`,
                 }}
               >
-                {/* New: neon rail bar (active, expanded only) */}
                 {isActive && !collapsed && (
                   <span
                     className={cn("sidebar-rail", cfg.railColor)}
@@ -455,28 +522,53 @@ export default function Sidebar() {
                   </span>
                 ) : (
                   <>
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      {/* New: dual-ring GlowDot */}
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
                       <GlowDot cfg={cfg} />
                       {cfg.icon}
-                      <span
-                        className={cn(
-                          "text-sm truncate transition-colors",
-                          isActive ? "text-white font-medium" : "text-white/70",
-                        )}
-                      >
-                        {sec.name}
-                      </span>
+                      {isRenaming ? (
+                        <InlineRename
+                          initialValue={sec.name}
+                          onConfirm={(v) => handleRename(sec.id, v)}
+                          onCancel={() => setRenamingId(null)}
+                        />
+                      ) : (
+                        <span
+                          className={cn(
+                            "text-sm truncate transition-colors",
+                            isActive
+                              ? "text-white font-medium"
+                              : "text-white/70",
+                          )}
+                        >
+                          {sec.name}
+                        </span>
+                      )}
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(sec.id);
-                      }}
-                      className="opacity-0 group-hover:opacity-100 text-white/30 hover:text-red-400 transition-all ml-1 flex-shrink-0"
-                    >
-                      <Trash2 size={13} />
-                    </button>
+
+                    {!isRenaming && (
+                      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all ml-1 flex-shrink-0">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setRenamingId(sec.id);
+                          }}
+                          className="text-white/30 hover:text-amber-400 transition-colors p-0.5"
+                          title="Rename"
+                        >
+                          <Pencil size={11} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(sec.id);
+                          }}
+                          className="text-white/30 hover:text-red-400 transition-colors p-0.5"
+                          title="Delete"
+                        >
+                          <Trash2 size={11} />
+                        </button>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
@@ -484,9 +576,8 @@ export default function Sidebar() {
           })}
         </nav>
 
-        {/* ── Bottom actions — old layout ── */}
+        {/* Bottom actions */}
         <div className="border-t border-white/10 flex flex-col gap-1 p-2">
-          {/* Theme toggle */}
           <button
             onClick={toggleTheme}
             title={theme === "dark" ? "Chuyển Light mode" : "Chuyển Dark mode"}
@@ -503,7 +594,6 @@ export default function Sidebar() {
             )}
           </button>
 
-          {/* Add section — old style, no scan sweep */}
           <button
             onClick={() => !collapsed && setDialogOpen(true)}
             title="Thêm Section"

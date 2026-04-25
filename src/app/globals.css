@@ -1507,3 +1507,8 @@
       0 20px 60px rgba(0, 0, 0, 0.5);
   }
 }
+
+.active-finance {
+  border-color: rgba(52, 211, 153, 0.3);
+  background: rgba(52, 211, 153, 0.1);
+}

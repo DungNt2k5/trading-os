@@ -22,6 +22,8 @@ model Section {
   order     Int      @default(0)
   createdAt DateTime @default(now())
   pages     Page[]
+  dailyBalances DailyBalance[]
+  emailEvents   EmailEvent[]
 }
 
 model Page {
@@ -57,3 +59,31 @@ model PageTag {
   @@id([pageId, tagId])
 }
 
+model DailyBalance {
+  id         String   @id @default(cuid())
+  sectionId  String
+  section    Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  date       String
+  money1     Float    @default(0)
+  money2     Float    @default(0)
+  total      Float    @default(0)
+  note       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model EmailEvent {
+  id          String   @id @default(cuid())
+  sectionId   String
+  section     Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  email       String
+  exchange    String
+  eventCode   String
+  eventName   String?
+  amount      Float?
+  status      String   @default("pending")
+  eventDate   String?
+  note        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

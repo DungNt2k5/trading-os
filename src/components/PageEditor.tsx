@@ -9,8 +9,10 @@ import {
   ExpenseMeta,
 } from "@/store/useAppStore";
 import { useEditor, EditorContent } from "@tiptap/react";
-
-// TipTap extensions
+import { Table } from "@tiptap/extension-table";
+import { TableRow } from "@tiptap/extension-table-row";
+import { TableHeader } from "@tiptap/extension-table-header";
+import { TableCell } from "@tiptap/extension-table-cell";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import Typography from "@tiptap/extension-typography";
@@ -21,17 +23,13 @@ import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import Highlight from "@tiptap/extension-highlight";
 import TextAlign from "@tiptap/extension-text-align";
-import Underline from "@tiptap/extension-underline";
 import CharacterCount from "@tiptap/extension-character-count";
 import { createLowlight, common } from "lowlight";
-
-// Local extensions
 import { SlashCommand } from "./ui/SlashCommand";
 import { CalloutNode } from "./ui/CalloutNode";
 import BubbleToolbar from "./ui/BubbleToolbar";
+import TableToolbar from "./ui/TableToolbar";
 import HoverBlockMenu from "./ui/HoverBlockMenu";
-
-// Icons
 import {
   ChevronLeft,
   DollarSign,
@@ -41,7 +39,6 @@ import {
   FileText,
   TrendingUp,
   TrendingDown,
-  Minus,
   Target,
   ShieldAlert,
   BarChart2,
@@ -51,111 +48,116 @@ import {
   Store,
   StickyNote,
   Hash,
+  Circle,
+  X,
 } from "lucide-react";
-
-// ── Lowlight setup ────────────────────────────────────────────────────────────
 
 const lowlight = createLowlight(common);
 
-// ── Tiptap global styles ──────────────────────────────────────────────────────
+// ── Status: ĐỦ 5 trạng thái ──────────────────────────────────────────────────
+
+export const STATUS_LIST = [
+  "active",
+  "in-progress",
+  "done",
+  "draft",
+  "archived",
+] as const;
+export type PageStatus = (typeof STATUS_LIST)[number];
+
+const STATUS_CONFIG: Record<
+  PageStatus,
+  { color: string; bg: string; border: string }
+> = {
+  active: {
+    color: "#00ff9f",
+    bg: "rgba(0,255,159,0.1)",
+    border: "rgba(0,255,159,0.25)",
+  },
+  "in-progress": {
+    color: "#fbbf24",
+    bg: "rgba(251,191,36,0.1)",
+    border: "rgba(251,191,36,0.25)",
+  },
+  done: {
+    color: "#60a5fa",
+    bg: "rgba(96,165,250,0.1)",
+    border: "rgba(96,165,250,0.25)",
+  },
+  draft: {
+    color: "#a78bfa",
+    bg: "rgba(167,139,250,0.1)",
+    border: "rgba(167,139,250,0.25)",
+  },
+  archived: {
+    color: "#666",
+    bg: "rgba(100,100,100,0.1)",
+    border: "rgba(100,100,100,0.25)",
+  },
+};
+
+export const STATUS_COLOR: Record<string, string> = {
+  active: "#00ff9f",
+  "in-progress": "#fbbf24",
+  done: "#60a5fa",
+  draft: "#a78bfa",
+  archived: "#555",
+};
+
+// ── Editor styles ─────────────────────────────────────────────────────────────
 
 const EDITOR_STYLES = `
-    .tiptap-editor .ProseMirror {
-      outline: none;
-      min-height: 55vh;
-      padding-left: 8px;
-      color: rgba(255,255,255,0.75);
-      font-size: 15px;
-      line-height: 1.8;
-      caret-color: #22d3ee;
-    }
-    .tiptap-editor .ProseMirror > * + * { margin-top: 0.6em; }
-    .tiptap-editor .ProseMirror p.is-editor-empty:first-child::before {
-      content: attr(data-placeholder);
-      color: rgba(255,255,255,0.12);
-      pointer-events: none;
-      float: left;
-      height: 0;
-    }
-    .tiptap-editor .ProseMirror h1 {
-      font-size: 2em; font-weight: 700; color: rgba(255,255,255,0.92);
-      margin: 1.2em 0 0.4em; line-height: 1.2;
-      background: linear-gradient(135deg, #fff 0%, rgba(34,211,238,0.8) 100%);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .tiptap-editor .ProseMirror h2 {
-      font-size: 1.4em; font-weight: 600; color: rgba(255,255,255,0.88);
-      margin: 1em 0 0.35em; line-height: 1.3;
-    }
-    .tiptap-editor .ProseMirror h3 {
-      font-size: 1.15em; font-weight: 600; color: rgba(255,255,255,0.82);
-      margin: 0.8em 0 0.3em;
-    }
-    .tiptap-editor .ProseMirror ul,
-    .tiptap-editor .ProseMirror ol { padding-left: 1.4em; }
-    .tiptap-editor .ProseMirror ul li { list-style: disc; }
-    .tiptap-editor .ProseMirror ol li { list-style: decimal; }
-    .tiptap-editor .ProseMirror li { margin: 0.25em 0; }
-    .tiptap-editor .ProseMirror ul[data-type="taskList"] { list-style: none; padding-left: 0; }
-    .tiptap-editor .ProseMirror ul[data-type="taskList"] li { display: flex; align-items: flex-start; gap: 8px; }
-    .tiptap-editor .ProseMirror ul[data-type="taskList"] li > label { flex-shrink: 0; margin-top: 3px; }
-    .tiptap-editor .ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-color: #22d3ee; }
-    .tiptap-editor .ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div { color: rgba(255,255,255,0.3); text-decoration: line-through; }
-    .tiptap-editor .ProseMirror ul[data-type="taskList"] li > div { flex: 1; }
-    .tiptap-editor .ProseMirror code {
-      background: rgba(6,182,212,0.1);
-      border: 0.5px solid rgba(6,182,212,0.2);
-      border-radius: 4px; padding: 1px 5px;
-      font-family: 'Fira Code', 'Cascadia Code', monospace;
-      font-size: 0.88em; color: #22d3ee;
-    }
-    .tiptap-editor .ProseMirror pre {
-      background: rgba(0,0,0,0.5);
-      border: 0.5px solid rgba(255,255,255,0.08);
-      border-radius: 10px; padding: 16px 20px; overflow-x: auto; margin: 1em 0;
-    }
-    .tiptap-editor .ProseMirror pre code { background: none; border: none; padding: 0; color: rgba(255,255,255,0.75); font-size: 0.88em; }
-    .tiptap-editor .ProseMirror blockquote {
-      border-left: 3px solid rgba(6,182,212,0.4);
-      padding: 4px 0 4px 16px; color: rgba(255,255,255,0.5); font-style: italic; margin: 1em 0;
-    }
-    .tiptap-editor .ProseMirror hr { border: none; border-top: 0.5px solid rgba(255,255,255,0.1); margin: 2em 0; }
-    .tiptap-editor .ProseMirror a { color: #22d3ee; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(34,211,238,0.4); cursor: pointer; }
-    .tiptap-editor .ProseMirror a:hover { text-decoration-color: rgba(34,211,238,0.9); }
-    .tiptap-editor .ProseMirror mark { background: rgba(251,191,36,0.25); color: rgba(255,255,255,0.85); border-radius: 3px; padding: 0 2px; }
-    .tiptap-editor .ProseMirror img { max-width: 100%; border-radius: 10px; border: 0.5px solid rgba(255,255,255,0.08); margin: 1em 0; }
-    .tiptap-editor .ProseMirror img.ProseMirror-selectednode { outline: 2px solid rgba(6,182,212,0.6); }
-    .tiptap-editor .hljs-keyword { color: #c792ea; }
-    .tiptap-editor .hljs-string  { color: #c3e88d; }
-    .tiptap-editor .hljs-comment { color: rgba(255,255,255,0.3); font-style: italic; }
-    .tiptap-editor .hljs-number  { color: #f78c6c; }
-    .tiptap-editor .hljs-function { color: #82aaff; }
-    .tiptap-editor .hljs-title   { color: #82aaff; }
-    .tiptap-editor .hljs-built_in { color: #ffcb6b; }
-    .tiptap-editor .hljs-type    { color: #ffcb6b; }
-    .tiptap-editor .hljs-attr    { color: #89ddff; }
-    .tiptap-editor .hljs-variable { color: #f07178; }
-    .tiptap-editor .hljs-operator { color: #89ddff; }
-    .tiptap-editor .hljs-params  { color: rgba(255,255,255,0.65); }
-    .tiptap-editor .ProseMirror ::selection { background: rgba(6,182,212,0.2); }
-    .tippy-box { background: none !important; box-shadow: none !important; }
-    .tippy-content { padding: 0 !important; }
-  `;
+.tiptap-editor .ProseMirror {
+  outline:none; min-height:55vh; padding-left:8px;
+  color:rgba(255,255,255,0.75); font-size:15px; line-height:1.8; caret-color:#22d3ee;
+}
+.tiptap-editor .ProseMirror > * + * { margin-top:0.6em; }
+.tiptap-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content:attr(data-placeholder); color:rgba(255,255,255,0.12); pointer-events:none; float:left; height:0;
+}
+.tiptap-editor .ProseMirror h1 {
+  font-size:2em; font-weight:700; margin:1.2em 0 0.4em; line-height:1.2;
+  background:linear-gradient(135deg,#fff 0%,rgba(34,211,238,0.8) 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.tiptap-editor .ProseMirror h2 { font-size:1.4em; font-weight:600; color:rgba(255,255,255,0.88); margin:1em 0 0.35em; }
+.tiptap-editor .ProseMirror h3 { font-size:1.15em; font-weight:600; color:rgba(255,255,255,0.82); margin:0.8em 0 0.3em; }
+.tiptap-editor .ProseMirror ul,.tiptap-editor .ProseMirror ol { padding-left:1.4em; }
+.tiptap-editor .ProseMirror ul li { list-style:disc; }
+.tiptap-editor .ProseMirror ol li { list-style:decimal; }
+.tiptap-editor .ProseMirror li { margin:0.25em 0; }
+.tiptap-editor .ProseMirror ul[data-type="taskList"] { list-style:none; padding-left:0; }
+.tiptap-editor .ProseMirror ul[data-type="taskList"] li { display:flex; align-items:flex-start; gap:8px; }
+.tiptap-editor .ProseMirror ul[data-type="taskList"] li>label { flex-shrink:0; margin-top:3px; }
+.tiptap-editor .ProseMirror ul[data-type="taskList"] li>label input[type="checkbox"] { width:15px; height:15px; cursor:pointer; accent-color:#22d3ee; }
+.tiptap-editor .ProseMirror ul[data-type="taskList"] li[data-checked="true"]>div { color:rgba(255,255,255,0.3); text-decoration:line-through; }
+.tiptap-editor .ProseMirror ul[data-type="taskList"] li>div { flex:1; }
+.tiptap-editor .ProseMirror code { background:rgba(6,182,212,0.1); border:0.5px solid rgba(6,182,212,0.2); border-radius:4px; padding:1px 5px; font-family:'Fira Code',monospace; font-size:0.88em; color:#22d3ee; }
+.tiptap-editor .ProseMirror pre { background:rgba(0,0,0,0.5); border:0.5px solid rgba(255,255,255,0.08); border-radius:10px; padding:16px 20px; overflow-x:auto; margin:1em 0; }
+.tiptap-editor .ProseMirror pre code { background:none; border:none; padding:0; color:rgba(255,255,255,0.75); font-size:0.88em; }
+.tiptap-editor .ProseMirror blockquote { border-left:3px solid rgba(6,182,212,0.4); padding:4px 0 4px 16px; color:rgba(255,255,255,0.5); font-style:italic; margin:1em 0; }
+.tiptap-editor .ProseMirror hr { border:none; border-top:0.5px solid rgba(255,255,255,0.1); margin:2em 0; }
+.tiptap-editor .ProseMirror a { color:#22d3ee; text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+.tiptap-editor .ProseMirror mark { background:rgba(251,191,36,0.25); color:rgba(255,255,255,0.85); border-radius:3px; padding:0 2px; }
+.tiptap-editor .ProseMirror img { max-width:100%; border-radius:10px; border:0.5px solid rgba(255,255,255,0.08); margin:1em 0; }
+.tiptap-editor .ProseMirror table { border-collapse:collapse; width:100%; table-layout:auto; font-size:13px; margin:1em 0; }
+.tiptap-editor .ProseMirror table th,.tiptap-editor .ProseMirror table td { border:0.5px solid rgba(255,255,255,0.06); padding:0 12px; height:38px; min-width:80px; color:rgba(255,255,255,0.7); position:relative; vertical-align:middle; }
+.tiptap-editor .ProseMirror table th { background:rgba(8,8,14,0.97); color:rgba(255,255,255,0.3); font-weight:500; font-size:11px; border-bottom:0.5px solid rgba(255,255,255,0.08); }
+.tiptap-editor .ProseMirror table .selectedCell { background:rgba(34,211,238,0.07)!important; border-color:rgba(34,211,238,0.35)!important; }
+.tippy-box { background:none!important; box-shadow:none!important; }
+.tippy-content { padding:0!important; }
+`;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function calcRR(entry: string, sl: string, tp: string, dir: string): string {
-  const e = parseFloat(entry);
-  const s = parseFloat(sl);
-  const t = parseFloat(tp);
+function calcRR(entry: string, sl: string, tp: string): string {
+  const e = parseFloat(entry),
+    s = parseFloat(sl),
+    t = parseFloat(tp);
   if (!e || !s || !t || e === s) return "";
-  const risk = Math.abs(e - s);
-  const reward = Math.abs(t - e);
-  const rr = reward / risk;
+  const rr = Math.abs(t - e) / Math.abs(e - s);
   return isNaN(rr) ? "" : rr.toFixed(2);
 }
-
-// ── Sub-components ────────────────────────────────────────────────────────────
 
 const ACCENT: Record<
   string,
@@ -293,7 +295,33 @@ function MetaInput({
   );
 }
 
-// ── Direction toggle ──────────────────────────────────────────────────────────
+function MetaSection({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div style={{ marginBottom: 10 }}>
+      <div
+        style={{
+          fontSize: 9,
+          color: "rgba(255,255,255,0.2)",
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          fontWeight: 600,
+          marginBottom: 6,
+        }}
+      >
+        {label}
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 function DirectionToggle({
   value,
@@ -306,8 +334,7 @@ function DirectionToggle({
     <div style={{ display: "flex", gap: 4 }}>
       {(["long", "short"] as const).map((dir) => {
         const isActive = value === dir;
-        const isLong = dir === "long";
-        const activeColor = isLong ? "#34d399" : "#f87171";
+        const color = dir === "long" ? "#34d399" : "#f87171";
         return (
           <button
             key={dir}
@@ -319,17 +346,20 @@ function DirectionToggle({
               padding: "4px 10px",
               borderRadius: 6,
               cursor: "pointer",
-              border: `0.5px solid ${isActive ? activeColor + "60" : "rgba(255,255,255,0.1)"}`,
-              background: isActive ? activeColor + "15" : "transparent",
-              color: isActive ? activeColor : "rgba(255,255,255,0.3)",
+              border: `0.5px solid ${isActive ? color + "60" : "rgba(255,255,255,0.1)"}`,
+              background: isActive ? color + "15" : "transparent",
+              color: isActive ? color : "rgba(255,255,255,0.3)",
               fontSize: 11,
               fontWeight: 600,
               transition: "all 0.15s",
-              letterSpacing: "0.05em",
               textTransform: "uppercase",
             }}
           >
-            {isLong ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+            {dir === "long" ? (
+              <TrendingUp size={11} />
+            ) : (
+              <TrendingDown size={11} />
+            )}
             {dir}
           </button>
         );
@@ -337,8 +367,6 @@ function DirectionToggle({
     </div>
   );
 }
-
-// ── RR Display badge ──────────────────────────────────────────────────────────
 
 function RRBadge({ rr }: { rr: string }) {
   if (!rr) return null;
@@ -380,37 +408,278 @@ function RRBadge({ rr }: { rr: string }) {
   );
 }
 
-// ── Section divider ───────────────────────────────────────────────────────────
+// ── Status Select - ĐỦ 5 ─────────────────────────────────────────────────────
 
-function MetaSection({
-  label,
-  children,
+function StatusSelect({
+  value,
+  onChange,
 }: {
-  label: string;
-  children: React.ReactNode;
+  value: string;
+  onChange: (v: string) => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const normalized = STATUS_LIST.includes(value as PageStatus)
+    ? (value as PageStatus)
+    : "active";
+  const cfg = STATUS_CONFIG[normalized];
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
   return (
-    <div style={{ marginBottom: 10 }}>
-      <div
+    <div ref={ref} style={{ position: "relative" }}>
+      <button
+        onClick={() => setOpen((v) => !v)}
         style={{
-          fontSize: 9,
-          color: "rgba(255,255,255,0.2)",
-          letterSpacing: "0.12em",
-          textTransform: "uppercase",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          padding: "3px 10px 3px 8px",
+          borderRadius: 6,
+          border: `0.5px solid ${cfg.border}`,
+          background: cfg.bg,
+          cursor: "pointer",
+          fontSize: 12,
           fontWeight: 600,
-          marginBottom: 6,
+          color: cfg.color,
+          transition: "all 0.15s",
         }}
       >
-        {label}
-      </div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-        {children}
-      </div>
+        <span
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: "50%",
+            background: cfg.color,
+            boxShadow: `0 0 6px ${cfg.color}`,
+            flexShrink: 0,
+          }}
+        />
+        {normalized}
+        <svg
+          width="10"
+          height="10"
+          viewBox="0 0 10 10"
+          style={{ opacity: 0.5, marginLeft: 2 }}
+        >
+          <path
+            d="M2 3.5L5 6.5L8 3.5"
+            stroke="currentColor"
+            strokeWidth="1.2"
+            fill="none"
+            strokeLinecap="round"
+          />
+        </svg>
+      </button>
+
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            top: "calc(100% + 6px)",
+            left: 0,
+            zIndex: 999,
+            background: "rgba(8,8,14,0.97)",
+            border: "0.5px solid rgba(255,255,255,0.1)",
+            borderRadius: 10,
+            padding: "4px 0",
+            minWidth: 145,
+            boxShadow: "0 8px 24px rgba(0,0,0,0.6)",
+            backdropFilter: "blur(12px)",
+          }}
+        >
+          {STATUS_LIST.map((s) => {
+            const sc = STATUS_CONFIG[s];
+            const isActive = s === normalized;
+            return (
+              <button
+                key={s}
+                onClick={() => {
+                  onChange(s);
+                  setOpen(false);
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  width: "100%",
+                  padding: "7px 14px",
+                  background: isActive ? sc.bg : "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: 12,
+                  fontWeight: isActive ? 600 : 400,
+                  color: isActive ? sc.color : "rgba(255,255,255,0.6)",
+                  textAlign: "left",
+                  transition: "all 0.1s",
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive)
+                    (e.currentTarget as HTMLElement).style.background =
+                      "rgba(255,255,255,0.05)";
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive)
+                    (e.currentTarget as HTMLElement).style.background =
+                      "transparent";
+                }}
+              >
+                <span
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background: sc.color,
+                    boxShadow: isActive ? `0 0 6px ${sc.color}` : "none",
+                    flexShrink: 0,
+                  }}
+                />
+                {s}
+                {isActive && (
+                  <svg
+                    width="10"
+                    height="10"
+                    viewBox="0 0 10 10"
+                    style={{ marginLeft: "auto", color: sc.color }}
+                  >
+                    <path
+                      d="M2 5L4.5 7.5L8.5 3"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
 
-// ── Main Component ────────────────────────────────────────────────────────────
+// ── Tag Chip Input ────────────────────────────────────────────────────────────
+
+function TagInput({
+  tags,
+  onChange,
+}: {
+  tags: string[];
+  onChange: (tags: string[]) => void;
+}) {
+  const [input, setInput] = useState("");
+  const TAG_COLORS = [
+    "#22d3ee",
+    "#a855f7",
+    "#ec4899",
+    "#f59e0b",
+    "#10b981",
+    "#3b82f6",
+    "#f97316",
+    "#84cc16",
+  ];
+  const colorFor = (tag: string) =>
+    TAG_COLORS[tag.charCodeAt(0) % TAG_COLORS.length];
+  const addTag = (val: string) => {
+    const t = val.trim().toLowerCase();
+    if (t && !tags.includes(t)) onChange([...tags, t]);
+    setInput("");
+  };
+  const removeTag = (tag: string) => onChange(tags.filter((t) => t !== tag));
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        alignItems: "center",
+        gap: 5,
+        padding: "4px 8px",
+        borderRadius: 8,
+        background: "rgba(168,85,247,0.05)",
+        border: "0.5px solid rgba(168,85,247,0.2)",
+        minHeight: 34,
+      }}
+    >
+      <Tag size={11} style={{ color: "rgba(168,85,247,0.5)", flexShrink: 0 }} />
+      {tags.map((tag) => {
+        const c = colorFor(tag);
+        return (
+          <span
+            key={tag}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+              fontSize: 11,
+              padding: "2px 8px 2px 7px",
+              borderRadius: 10,
+              color: c,
+              background: c + "18",
+              border: `0.5px solid ${c}40`,
+            }}
+          >
+            {tag}
+            <button
+              onClick={() => removeTag(tag)}
+              style={{
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                color: c,
+                display: "flex",
+                padding: 0,
+                opacity: 0.6,
+              }}
+            >
+              <X size={9} />
+            </button>
+          </span>
+        );
+      })}
+      <input
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === ",") {
+            e.preventDefault();
+            addTag(input);
+          }
+          if (e.key === "Backspace" && !input && tags.length)
+            removeTag(tags[tags.length - 1]);
+        }}
+        onBlur={() => {
+          if (input.trim()) addTag(input);
+        }}
+        placeholder={
+          tags.length === 0 ? "Thêm tag... (Enter hoặc dấu phẩy)" : ""
+        }
+        style={{
+          background: "transparent",
+          border: "none",
+          outline: "none",
+          fontSize: 12,
+          color: "rgba(255,255,255,0.5)",
+          minWidth: 120,
+          flex: 1,
+        }}
+      />
+    </div>
+  );
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
 
 export default function PageEditor() {
   const {
@@ -421,22 +690,21 @@ export default function PageEditor() {
     sections,
     activeSectionId,
   } = useAppStore();
-
   const page = pages.find((p) => p.id === activePageId);
   const activeSection = sections.find((s) => s.id === activeSectionId);
   const isTrading = activeSection?.type === "trading";
   const isExpense = activeSection?.type === "expense";
 
-  // ── Core fields ───────────────────────────────────────────────────────────
   const [title, setTitle] = useState("");
-  const [pnl, setPnl] = useState<string>("");
-  const [amount, setAmount] = useState<string>("");
-  const [category, setCategory] = useState<string>("");
+  const [pageStatus, setPageStatus] = useState<string>("active");
+  const [pnl, setPnl] = useState("");
+  const [amount, setAmount] = useState("");
+  const [category, setCategory] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [wordCount, setWordCount] = useState(0);
 
-  // ── Trading metadata ──────────────────────────────────────────────────────
   const [direction, setDirection] = useState<"long" | "short" | "">("");
   const [entryPrice, setEntryPrice] = useState("");
   const [exitPrice, setExitPrice] = useState("");
@@ -445,8 +713,6 @@ export default function PageEditor() {
   const [size, setSize] = useState("");
   const [session, setSession] = useState("");
   const [setup, setSetup] = useState("");
-
-  // ── Expense metadata ──────────────────────────────────────────────────────
   const [paymentMethod, setPaymentMethod] = useState("");
   const [merchant, setMerchant] = useState("");
   const [expenseNote, setExpenseNote] = useState("");
@@ -455,7 +721,6 @@ export default function PageEditor() {
   const autoSaveTimer = useRef<NodeJS.Timeout | null>(null);
   const stylesInjected = useRef(false);
 
-  // Inject global CSS once
   useEffect(() => {
     if (stylesInjected.current) return;
     const style = document.createElement("style");
@@ -463,8 +728,6 @@ export default function PageEditor() {
     document.head.appendChild(style);
     stylesInjected.current = true;
   }, []);
-
-  // ── TipTap ────────────────────────────────────────────────────────────────
 
   const editor = useEditor({
     extensions: [
@@ -476,14 +739,13 @@ export default function PageEditor() {
         placeholder: ({ node }) => {
           if (node.type.name === "heading") return "Heading...";
           return isTrading
-            ? "Setup, lý do vào lệnh, cảm nhận, bài học... (gõ / để chèn block)"
+            ? "Setup, lý do vào lệnh... (gõ / để chèn block)"
             : isExpense
               ? "Ghi chú chi tiêu... (gõ / để chèn block)"
               : "Bắt đầu viết... (gõ / để chèn block)";
         },
       }),
       Typography,
-      Underline,
       Highlight.configure({ multicolor: false }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Link.configure({
@@ -498,6 +760,10 @@ export default function PageEditor() {
       CharacterCount,
       CalloutNode,
       SlashCommand,
+      Table.configure({ resizable: true }),
+      TableRow,
+      TableHeader,
+      TableCell,
     ],
     content: page?.content || "",
     editorProps: { attributes: { class: "ProseMirror", spellcheck: "false" } },
@@ -508,20 +774,17 @@ export default function PageEditor() {
     immediatelyRender: false,
   });
 
-  // ── Sync when switching pages ─────────────────────────────────────────────
-
   useEffect(() => {
     if (!page) return;
-
     setTitle(page.title);
+    // Giữ nguyên status từ DB, không normalize
+    setPageStatus(page.status ?? "active");
     setPnl(page.pnl?.toString() ?? "");
     setAmount(page.amount?.toString() ?? "");
     setCategory(page.category ?? "");
+    setTags(page.tags?.map((pt) => pt.tag.name) ?? []);
     setLastSaved(null);
-
-    // Parse metadata
     const meta = parseMeta(page.metadata);
-
     if (isTrading) {
       setDirection((meta.direction as "long" | "short" | "") ?? "");
       setEntryPrice(meta.entryPrice?.toString() ?? "");
@@ -532,16 +795,13 @@ export default function PageEditor() {
       setSession(meta.session ?? "");
       setSetup(meta.setup ?? "");
     }
-
     if (isExpense) {
       setPaymentMethod((meta as ExpenseMeta).paymentMethod ?? "");
       setMerchant((meta as ExpenseMeta).merchant ?? "");
       setExpenseNote((meta as ExpenseMeta).note ?? "");
     }
-
-    if (editor && editor.getHTML() !== page.content) {
+    if (editor && editor.getHTML() !== page.content)
       editor.commands.setContent(page.content || "", { emitUpdate: false });
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePageId]);
 
@@ -551,8 +811,6 @@ export default function PageEditor() {
     },
     [editor],
   );
-
-  // ── Save ──────────────────────────────────────────────────────────────────
 
   const buildMetadata = useCallback(
     (overrides: Record<string, string | undefined> = {}): string | null => {
@@ -598,40 +856,55 @@ export default function PageEditor() {
   );
 
   const save = useCallback(
-    async (overrides: Record<string, string | undefined> = {}) => {
+    async (overrides: Record<string, unknown> = {}) => {
       if (!activePageId) return;
       setSaving(true);
-
       const body: Record<string, unknown> = {
         title: overrides.title ?? title,
         content: overrides.content ?? editor?.getHTML() ?? "",
+        status: overrides.status ?? pageStatus,
+        category: (overrides.category as string) ?? category ?? null,
+        metadata: buildMetadata(
+          overrides as Record<string, string | undefined>,
+        ),
+        tags: overrides.tags !== undefined ? overrides.tags : tags,
       };
-
-      const rawPnl = overrides.pnl ?? pnl;
-      const rawAmount = overrides.amount ?? amount;
-      const rawCategory = overrides.category ?? category;
-
-      if (isTrading) body.pnl = rawPnl ? parseFloat(rawPnl) : null;
-      if (isExpense) body.amount = rawAmount ? parseFloat(rawAmount) : null;
-      body.category = rawCategory || null;
-      body.metadata = buildMetadata(overrides);
+      if (isTrading)
+        body.pnl =
+          overrides.pnl !== undefined
+            ? overrides.pnl
+              ? parseFloat(overrides.pnl as string)
+              : null
+            : pnl
+              ? parseFloat(pnl)
+              : null;
+      if (isExpense)
+        body.amount =
+          overrides.amount !== undefined
+            ? overrides.amount
+              ? parseFloat(overrides.amount as string)
+              : null
+            : amount
+              ? parseFloat(amount)
+              : null;
 
       const res = await fetch(`/api/pages/${activePageId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const updated = await res.json();
-      updatePage(activePageId, updated);
+      updatePage(activePageId, await res.json());
       setSaving(false);
       setLastSaved(new Date());
     },
     [
       activePageId,
       title,
+      pageStatus,
       pnl,
       amount,
       category,
+      tags,
       editor,
       isTrading,
       isExpense,
@@ -641,18 +914,14 @@ export default function PageEditor() {
   );
 
   const triggerAutoSave = useCallback(
-    (overrides: Record<string, string | undefined> = {}) => {
+    (overrides: Record<string, unknown> = {}) => {
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
       autoSaveTimer.current = setTimeout(() => save(overrides), 800);
     },
     [save],
   );
 
-  // ── Computed ──────────────────────────────────────────────────────────────
-
-  const autoRR = calcRR(entryPrice, stopLoss, takeProfit, direction);
-
-  // ── Empty state ───────────────────────────────────────────────────────────
+  const autoRR = calcRR(entryPrice, stopLoss, takeProfit);
 
   if (!activePageId || !page) {
     return (
@@ -667,11 +936,9 @@ export default function PageEditor() {
     );
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
-
   return (
     <div className="flex-1 flex flex-col h-screen overflow-hidden">
-      {/* ── Toolbar ──────────────────────────────────────────────────────── */}
+      {/* Toolbar */}
       <div className="px-6 py-3 border-b border-white/10 flex items-center justify-between bg-black/20 backdrop-blur-sm">
         <button
           onClick={() => setActivePageId(null)}
@@ -680,7 +947,6 @@ export default function PageEditor() {
           <ChevronLeft size={14} />
           <span>Quay lại</span>
         </button>
-
         <div className="flex items-center gap-4">
           <span className="text-[11px] text-white/20 tabular-nums">
             {wordCount} words
@@ -702,10 +968,9 @@ export default function PageEditor() {
         </div>
       </div>
 
-      {/* ── Scrollable content ────────────────────────────────────────────── */}
+      {/* Content */}
       <div className="flex-1 overflow-y-auto">
         <div className="px-10 py-10 max-w-3xl w-full mx-auto">
-          {/* Title */}
           <input
             value={title}
             onChange={(e) => {
@@ -713,11 +978,11 @@ export default function PageEditor() {
               triggerAutoSave({ title: e.target.value });
             }}
             placeholder="Tiêu đề..."
-            className="w-full text-4xl font-bold bg-transparent text-white/90 placeholder-white/15 outline-none mb-4 leading-tight"
+            className="w-full text-4xl font-bold bg-transparent text-white/90 placeholder-white/15 outline-none mb-3 leading-tight"
           />
 
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-2 mb-8">
+          {/* Status + breadcrumb */}
+          <div className="flex items-center gap-3 mb-6 flex-wrap">
             <span className="text-[11px] text-white/20">
               {activeSection?.name}
             </span>
@@ -727,11 +992,28 @@ export default function PageEditor() {
                 "vi-VN",
               )}
             </span>
+            <span className="text-[11px] text-white/10">·</span>
+            <StatusSelect
+              value={pageStatus}
+              onChange={(v) => {
+                setPageStatus(v);
+                triggerAutoSave({ status: v });
+              }}
+            />
           </div>
 
-          {/* ═══════════════════════════════════════════════════════════════
-                TRADING METADATA
-            ══════════════════════════════════════════════════════════════════ */}
+          {/* Tags */}
+          <div style={{ marginBottom: 24 }}>
+            <TagInput
+              tags={tags}
+              onChange={(newTags) => {
+                setTags(newTags);
+                triggerAutoSave({ tags: newTags });
+              }}
+            />
+          </div>
+
+          {/* Trading metadata */}
           {isTrading && (
             <div
               style={{
@@ -742,7 +1024,6 @@ export default function PageEditor() {
                 marginBottom: 28,
               }}
             >
-              {/* Header */}
               <div
                 style={{
                   fontSize: 10,
@@ -755,8 +1036,6 @@ export default function PageEditor() {
               >
                 Trade Details
               </div>
-
-              {/* Row 1: Direction + PnL + Pair */}
               <MetaSection label="Position">
                 <DirectionToggle
                   value={direction}
@@ -765,7 +1044,6 @@ export default function PageEditor() {
                     triggerAutoSave({ direction: v });
                   }}
                 />
-
                 <MetaField
                   icon={<DollarSign size={12} />}
                   label="PnL"
@@ -795,7 +1073,6 @@ export default function PageEditor() {
                     }}
                   />
                 </MetaField>
-
                 <MetaField
                   icon={<Tag size={12} />}
                   label="Pair"
@@ -812,7 +1089,6 @@ export default function PageEditor() {
                     }}
                   />
                 </MetaField>
-
                 <MetaField
                   icon={<Layers size={12} />}
                   label="Size"
@@ -831,8 +1107,6 @@ export default function PageEditor() {
                   />
                 </MetaField>
               </MetaSection>
-
-              {/* Row 2: Entry / Exit / SL / TP */}
               <MetaSection label="Price Levels">
                 <MetaField
                   icon={<Target size={12} />}
@@ -851,7 +1125,6 @@ export default function PageEditor() {
                     }}
                   />
                 </MetaField>
-
                 <MetaField
                   icon={<Target size={12} />}
                   label="Exit"
@@ -869,7 +1142,6 @@ export default function PageEditor() {
                     }}
                   />
                 </MetaField>
-
                 <MetaField
                   icon={<ShieldAlert size={12} />}
                   label="Stop Loss"
@@ -887,7 +1159,6 @@ export default function PageEditor() {
                     }}
                   />
                 </MetaField>
-
                 <MetaField
                   icon={<TrendingUp size={12} />}
                   label="Take Profit"
@@ -905,12 +1176,8 @@ export default function PageEditor() {
                     }}
                   />
                 </MetaField>
-
-                {/* Auto-computed R:R */}
                 <RRBadge rr={autoRR} />
               </MetaSection>
-
-              {/* Row 3: Session + Setup */}
               <MetaSection label="Context">
                 <MetaField
                   icon={<Clock size={12} />}
@@ -928,7 +1195,6 @@ export default function PageEditor() {
                     }}
                   />
                 </MetaField>
-
                 <MetaField
                   icon={<Hash size={12} />}
                   label="Setup"
@@ -949,9 +1215,7 @@ export default function PageEditor() {
             </div>
           )}
 
-          {/* ═══════════════════════════════════════════════════════════════
-                EXPENSE METADATA
-            ══════════════════════════════════════════════════════════════════ */}
+          {/* Expense metadata */}
           {isExpense && (
             <div
               style={{
@@ -974,7 +1238,6 @@ export default function PageEditor() {
               >
                 Expense Details
               </div>
-
               <MetaSection label="Amount & Category">
                 <MetaField
                   icon={<DollarSign size={12} />}
@@ -993,7 +1256,6 @@ export default function PageEditor() {
                     }}
                   />
                 </MetaField>
-
                 <MetaField
                   icon={<Tag size={12} />}
                   label="Category"
@@ -1011,7 +1273,6 @@ export default function PageEditor() {
                   />
                 </MetaField>
               </MetaSection>
-
               <MetaSection label="Payment Info">
                 <MetaField
                   icon={<CreditCard size={12} />}
@@ -1029,7 +1290,6 @@ export default function PageEditor() {
                     }}
                   />
                 </MetaField>
-
                 <MetaField
                   icon={<Store size={12} />}
                   label="Merchant"
@@ -1046,7 +1306,6 @@ export default function PageEditor() {
                     }}
                   />
                 </MetaField>
-
                 <MetaField
                   icon={<StickyNote size={12} />}
                   label="Note"
@@ -1067,10 +1326,8 @@ export default function PageEditor() {
             </div>
           )}
 
-          {/* Divider */}
           <div className="h-px bg-white/5 mb-8" />
 
-          {/* Slash hint */}
           <div className="flex items-center gap-2 mb-4 opacity-0 hover:opacity-100 transition-opacity duration-300">
             <kbd
               style={{
@@ -1090,13 +1347,13 @@ export default function PageEditor() {
             </span>
           </div>
 
-          {/* ── TipTap editor ───────────────────────────────────────────── */}
           <div
             ref={editorContainerRef}
             className="tiptap-editor"
             style={{ position: "relative" }}
           >
             {editor && <BubbleToolbar editor={editor} />}
+            {editor && <TableToolbar editor={editor} />}
             {editor && (
               <HoverBlockMenu
                 editor={editor}

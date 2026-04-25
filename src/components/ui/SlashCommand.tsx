@@ -20,7 +20,9 @@ import {
   AlertCircle,
   Lightbulb,
   AlertTriangle,
+  XCircle,
   Image as ImageIcon,
+  Table,
 } from "lucide-react";
 
 // ── Command definitions ──────────────────────────────────────────────────────
@@ -134,6 +136,19 @@ export const SLASH_COMMANDS = [
           editor.chain().focus().deleteRange(range).setHorizontalRule().run();
         },
       },
+      {
+        title: "Table",
+        description: "Insert a table (3x3)",
+        icon: Table,
+        command: ({ editor, range }: any) => {
+          editor
+            .chain()
+            .focus()
+            .deleteRange(range)
+            .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+            .run();
+        },
+      },
     ],
   },
   {
@@ -190,6 +205,40 @@ export const SLASH_COMMANDS = [
             .run();
         },
       },
+      {
+        title: "Danger callout",
+        description: "🚨 Red danger box",
+        icon: XCircle,
+        command: ({ editor, range }: any) => {
+          editor
+            .chain()
+            .focus()
+            .deleteRange(range)
+            .insertContent({
+              type: "callout",
+              attrs: { type: "danger" },
+              content: [{ type: "paragraph" }],
+            })
+            .run();
+        },
+      },
+    ],
+  },
+  {
+    group: "Media",
+    items: [
+      {
+        title: "Image",
+        description: "Insert image from URL",
+        icon: ImageIcon,
+        command: ({ editor, range }: any) => {
+          editor.chain().focus().deleteRange(range).run();
+          const url = window.prompt("Nhập URL ảnh:");
+          if (url?.trim()) {
+            editor.chain().focus().setImage({ src: url.trim() }).run();
+          }
+        },
+      },
     ],
   },
 ];
@@ -205,7 +254,6 @@ export const CommandList = forwardRef<any, CommandListProps>(
   ({ items, command }, ref) => {
     const [selectedIndex, setSelectedIndex] = useState(0);
 
-    // Flatten for keyboard nav
     const flatItems = items.flatMap((g) => g.items);
 
     useImperativeHandle(ref, () => ({
@@ -239,7 +287,7 @@ export const CommandList = forwardRef<any, CommandListProps>(
           borderRadius: 12,
           padding: "6px 0",
           minWidth: 260,
-          maxHeight: 360,
+          maxHeight: 400,
           overflowY: "auto",
           boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
           backdropFilter: "blur(12px)",
