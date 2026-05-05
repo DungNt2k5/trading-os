@@ -163,7 +163,6 @@
    KEYFRAMES — GLOBAL
 ══════════════════════════════════════════════════════════════ */
 @layer utilities {
-  /* ── Typing dots ── */
   @keyframes typingBounce {
     0%,
     60%,
@@ -177,7 +176,6 @@
     }
   }
 
-  /* ── Skeleton shimmer ── */
   @keyframes skeletonShimmer {
     0% {
       background-position: -200% center;
@@ -187,7 +185,6 @@
     }
   }
 
-  /* ── Conic border rotation ── */
   @keyframes borderRotate {
     from {
       --angle: 0deg;
@@ -197,14 +194,6 @@
     }
   }
 
-  /* ══════════════════════════════════════════════════════════════
-     KEYFRAMES — SIDEBAR
-  ══════════════════════════════════════════════════════════════ */
-
-  /*
-   * OLD: simple translateX + opacity fade
-   * NEW: materialize with skew — like data assembling from void
-   */
   @keyframes sidebarItemIn {
     0% {
       opacity: 0;
@@ -222,10 +211,6 @@
     }
   }
 
-  /*
-   * OLD: simple scaleY from top
-   * NEW: neon fiber draw — rail grows with glow burst at tip
-   */
   @keyframes railDraw {
     0% {
       transform: scaleY(0);
@@ -242,9 +227,6 @@
     }
   }
 
-  /*
-   * NEW: rail flicker — occasional neon glitch like real tube light
-   */
   @keyframes railFlicker {
     0%,
     88%,
@@ -271,10 +253,6 @@
     }
   }
 
-  /*
-   * OLD: simple ping scale + opacity
-   * NEW: halo ring — expands with color trail, not just opacity
-   */
   @keyframes haloPulse {
     0% {
       transform: scale(1);
@@ -292,7 +270,6 @@
     }
   }
 
-  /* Outer halo ring that expands outward separately */
   @keyframes haloRingExpand {
     0% {
       transform: scale(1);
@@ -304,10 +281,6 @@
     }
   }
 
-  /*
-   * OLD: text-shadow color drift (too subtle)
-   * NEW: gradient position travel — logo text gets a shimmer pass
-   */
   @keyframes logoShimmer {
     0% {
       background-position: 0% 50%;
@@ -317,9 +290,6 @@
     }
   }
 
-  /*
-   * NEW: logo sigil box glow breathe — no old version
-   */
   @keyframes sigilBreathe {
     0%,
     100% {
@@ -335,10 +305,6 @@
     }
   }
 
-  /*
-   * OLD: single scanSweep line (barely visible)
-   * NEW: aurora beam — wider, more chromatic, slower + breathing
-   */
   @keyframes auroraBeam {
     0% {
       transform: translateY(-100%);
@@ -356,23 +322,6 @@
     }
   }
 
-  /*
-   * NEW: sigil sweep — hover light pass across nav items
-   * Triggered via class add in JS or pure CSS :hover
-   */
-  @keyframes sigilSweep {
-    from {
-      transform: translateX(-100%) skewX(-15deg);
-    }
-    to {
-      transform: translateX(250%) skewX(-15deg);
-    }
-  }
-
-  /*
-   * OLD: emWobble (rotate + scale)
-   * NEW: electromagnetic pulse — combines scale, rotate AND glow burst
-   */
   @keyframes emPulse {
     0% {
       transform: rotate(0deg) scale(1);
@@ -404,10 +353,6 @@
     }
   }
 
-  /*
-   * OLD: glitchFrame — clip-path slice (harsh)
-   * NEW: glitch cascade — multiple layers: hue-rotate + translate + noise
-   */
   @keyframes glitchCascade {
     0%,
     90%,
@@ -443,14 +388,6 @@
     }
   }
 
-  /* ══════════════════════════════════════════════════════════════
-     KEYFRAMES — PAGE LIST
-  ══════════════════════════════════════════════════════════════ */
-
-  /*
-   * OLD: translateY + max-height expansion
-   * NEW: fragment dissolve — blur + translate + scale, no max-height hack
-   */
   @keyframes fragmentIn {
     0% {
       opacity: 0;
@@ -467,10 +404,6 @@
     }
   }
 
-  /*
-   * OLD: accentTrace — simple height grow
-   * NEW: fiber draw — height + glow intensity build simultaneously
-   */
   @keyframes fiberDraw {
     0% {
       height: 0;
@@ -492,10 +425,6 @@
     }
   }
 
-  /*
-   * OLD: badgeShine — simple gradient slide
-   * NEW: crystalShimmer — angled metallic sheen
-   */
   @keyframes crystalShimmer {
     0% {
       background-position: -120% 0;
@@ -505,10 +434,6 @@
     }
   }
 
-  /*
-   * OLD: chipSlideIn — translateX + scale
-   * NEW: chipMaterialize — scale from 0.6 + translate + blur dissolve + stagger via delay
-   */
   @keyframes chipMaterialize {
     0% {
       opacity: 0;
@@ -526,10 +451,6 @@
     }
   }
 
-  /*
-   * OLD: winFlash — simple box-shadow ring
-   * NEW: winBurst — ring expands AND the chip brightens simultaneously
-   */
   @keyframes winBurst {
     0% {
       box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7);
@@ -549,7 +470,6 @@
     }
   }
 
-  /* NEW: loss drain — inverted: chip dims + dark ring implodes inward */
   @keyframes lossDrain {
     0% {
       box-shadow: 0 0 0 5px rgba(248, 113, 113, 0.4);
@@ -561,10 +481,6 @@
     }
   }
 
-  /*
-   * OLD: menuSnap — scale + translateY + blur (good, keep + enhance)
-   * NEW: ctxPortal — adds chromatic aberration on entry via hue-rotate
-   */
   @keyframes ctxPortal {
     0% {
       opacity: 0;
@@ -581,10 +497,6 @@
     }
   }
 
-  /*
-   * OLD: dialogDrop — blur + translateY + scale
-   * NEW: dialogRift — adds top-beam flash + chromatic entry
-   */
   @keyframes dialogRift {
     0% {
       opacity: 0;
@@ -604,7 +516,6 @@
     }
   }
 
-  /* NEW: overlay backdrop materialise */
   @keyframes backdropIn {
     from {
       opacity: 0;
@@ -616,7 +527,6 @@
     }
   }
 
-  /* NEW: holographic hover sweep — for page items */
   @keyframes holoSweep {
     from {
       left: -60%;
@@ -626,7 +536,6 @@
     }
   }
 
-  /* NEW: page item hover — dark sub-scan line on bottom edge */
   @keyframes subScanEdge {
     0% {
       transform: scaleX(0);
@@ -643,7 +552,6 @@
     }
   }
 
-  /* NEW: ambient particle float (used for rune overlays etc.) */
   @keyframes particleFloat {
     0% {
       transform: translateY(0) rotate(0deg);
@@ -668,8 +576,6 @@
   .animate-typing-bounce {
     animation: typingBounce 1.2s ease-in-out infinite;
   }
-
-  /* — Sidebar — */
   .animate-sidebar-item-in {
     animation: sidebarItemIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
@@ -702,8 +608,6 @@
   .animate-glitch-cascade {
     animation: glitchCascade 8s linear infinite;
   }
-
-  /* — PageList — */
   .animate-fragment-in {
     animation: fragmentIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
@@ -737,7 +641,7 @@
   }
 
   /* ══════════════════════════════════════════════════════════════
-     NEON TEXT GLOW — enhanced (3 layers + outer bloom)
+     NEON TEXT GLOW
   ══════════════════════════════════════════════════════════════ */
 
   .neon-cyan {
@@ -763,104 +667,6 @@
   }
 
   /* ══════════════════════════════════════════════════════════════
-     SIDEBAR SURFACE
-     OLD: flat bg-black/40 backdrop-blur
-     NEW: void membrane — layered depth with grid lines + aurora
-  ══════════════════════════════════════════════════════════════ */
-
-  .sidebar-surface {
-    position: relative;
-    /* Base: deep void */
-    background:
-      /* Subtle top-left radial bleed */
-      radial-gradient(
-        ellipse 70% 40% at 0% 0%,
-        rgba(34, 211, 238, 0.03) 0%,
-        transparent 60%
-      ),
-      radial-gradient(
-        ellipse 60% 60% at 100% 100%,
-        rgba(168, 85, 247, 0.025) 0%,
-        transparent 55%
-      ),
-      /* Horizontal grid lines */
-        repeating-linear-gradient(
-          0deg,
-          transparent,
-          transparent 28px,
-          rgba(255, 255, 255, 0.018) 28px,
-          rgba(255, 255, 255, 0.018) 29px
-        ),
-      /* Base dark */
-        linear-gradient(180deg, rgba(8, 8, 16, 0.99) 0%, rgba(6, 6, 13, 1) 100%);
-    border-right: 1px solid rgba(255, 255, 255, 0.055);
-    box-shadow:
-      1px 0 0 rgba(255, 255, 255, 0.03),
-      10px 0 40px rgba(0, 0, 0, 0.5);
-    overflow: hidden;
-  }
-
-  /* Scanline texture overlay */
-  .sidebar-surface::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(
-      180deg,
-      transparent 0px,
-      transparent 2px,
-      rgba(0, 0, 0, 0.1) 2px,
-      rgba(0, 0, 0, 0.1) 3px
-    );
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.5;
-  }
-
-  /* Aurora beam — moving neon line top to bottom */
-  .sidebar-surface::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 120px;
-    /* Wide chromatic beam instead of single thin line */
-    background: linear-gradient(
-      180deg,
-      transparent 0%,
-      rgba(34, 211, 238, 0) 10%,
-      rgba(34, 211, 238, 0.06) 40%,
-      rgba(168, 85, 247, 0.04) 60%,
-      rgba(34, 211, 238, 0) 90%,
-      transparent 100%
-    );
-    animation: auroraBeam 10s linear infinite;
-    pointer-events: none;
-    z-index: 1;
-  }
-
-  /* Right edge neon wire */
-  .sidebar-edge-wire {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 1px;
-    background: linear-gradient(
-      180deg,
-      transparent 0%,
-      rgba(34, 211, 238, 0) 15%,
-      rgba(34, 211, 238, 0.65) 38%,
-      rgba(168, 85, 247, 0.45) 60%,
-      rgba(34, 211, 238, 0) 82%,
-      transparent 100%
-    );
-    animation: railFlicker 4s ease-in-out infinite;
-    pointer-events: none;
-    z-index: 10;
-  }
-
-  /* ══════════════════════════════════════════════════════════════
      SIDEBAR — Logo sigil
   ══════════════════════════════════════════════════════════════ */
 
@@ -883,7 +689,6 @@
     flex-shrink: 0;
   }
 
-  /* Internal shine sweep on logo */
   .logo-sigil::after {
     content: "";
     position: absolute;
@@ -946,7 +751,6 @@
     will-change: transform;
   }
 
-  /* Hover: sigil sweep across item */
   .sidebar-item::before {
     content: "";
     position: absolute;
@@ -972,12 +776,10 @@
     background: rgba(255, 255, 255, 0.04);
   }
 
-  /* Active state — gradient depth + border */
   .sidebar-item.active {
     transform: translateX(2px);
   }
 
-  /* Neon rail — left edge indicator */
   .sidebar-rail {
     position: absolute;
     left: 0;
@@ -991,7 +793,6 @@
     transform-origin: top;
   }
 
-  /* Active item type-specific tint */
   .sidebar-item.active-trading {
     background: linear-gradient(
       90deg,
@@ -1033,12 +834,22 @@
     box-shadow: inset 0 0 20px rgba(250, 204, 21, 0.04);
   }
 
-  /* ── Collapsed icon hover ── */
+  /* ✅ FIX: active-finance chuyển vào đây (trước bị lạc ra ngoài @layer) */
+  .sidebar-item.active-finance {
+    background: linear-gradient(
+      90deg,
+      rgba(52, 211, 153, 0.1) 0%,
+      rgba(52, 211, 153, 0.02) 60%,
+      transparent 100%
+    );
+    border-color: rgba(52, 211, 153, 0.22) !important;
+    box-shadow: inset 0 0 20px rgba(52, 211, 153, 0.04);
+  }
+
   .sidebar-icon-wrap:hover .icon-inner {
     animation: emPulse 0.55s ease-in-out;
   }
 
-  /* ── Glowing dot with dual ring ── */
   .glow-dot-wrap {
     position: relative;
     width: 8px;
@@ -1070,32 +881,28 @@
 
   /* ══════════════════════════════════════════════════════════════
      PAGE LIST SURFACE
-     OLD: slight bg variation + scanline repeat
-     NEW: dot matrix grid — micro dots like circuit board
   ══════════════════════════════════════════════════════════════ */
 
   .pagelist-surface {
     position: relative;
     background:
-      /* Dot matrix overlay */
       radial-gradient(
           circle at 1px 1px,
           rgba(255, 255, 255, 0.028) 1px,
           transparent 0
         )
         0 0 / 20px 20px,
-      /* Corner aurora bleeds */
-        radial-gradient(
-          ellipse 50% 30% at 0% 0%,
-          rgba(34, 211, 238, 0.025) 0%,
-          transparent 70%
-        ),
+      radial-gradient(
+        ellipse 50% 30% at 0% 0%,
+        rgba(34, 211, 238, 0.025) 0%,
+        transparent 70%
+      ),
       radial-gradient(
         ellipse 40% 40% at 100% 100%,
         rgba(168, 85, 247, 0.02) 0%,
         transparent 70%
       ),
-      /* Base */ rgba(10, 10, 18, 0.98);
+      rgba(10, 10, 18, 0.98);
     border-right: 1px solid rgba(255, 255, 255, 0.055);
     box-shadow: 2px 0 20px rgba(0, 0, 0, 0.35);
     overflow: hidden;
@@ -1116,7 +923,6 @@
     will-change: transform;
   }
 
-  /* Holographic sheen on hover */
   .page-item::before {
     content: "";
     position: absolute;
@@ -1147,12 +953,10 @@
       -2px 0 0 rgba(255, 255, 255, 0.05);
   }
 
-  /* Active: quantum lock appearance */
   .page-item.active {
     transform: translateX(2px);
   }
 
-  /* Left edge fiber bar — replaces accentTrace */
   .page-fiber-bar {
     position: absolute;
     left: 0;
@@ -1206,6 +1010,23 @@
     animation:
       fiberDraw 0.24s cubic-bezier(0.16, 1, 0.3, 1) both,
       railFlicker 3s ease-in-out 0.3s infinite;
+  }
+
+  /* ✅ FIX: Thêm fiber-finance — emerald xanh lá như Sidebar */
+  .fiber-finance {
+    background: linear-gradient(
+      180deg,
+      transparent,
+      #34d399,
+      #22d3ee,
+      transparent
+    );
+    box-shadow:
+      0 0 8px rgba(52, 211, 153, 0.9),
+      0 0 16px rgba(52, 211, 153, 0.4);
+    animation:
+      fiberDraw 0.24s cubic-bezier(0.16, 1, 0.3, 1) both,
+      railFlicker 2.8s ease-in-out 0.3s infinite;
   }
 
   /* ══════════════════════════════════════════════════════════════
@@ -1302,7 +1123,6 @@
       0 0 120px rgba(168, 85, 247, 0.05);
   }
 
-  /* Top beam — neon line across dialog header */
   .dialog-panel::before {
     content: "";
     position: absolute;
@@ -1322,7 +1142,6 @@
     pointer-events: none;
   }
 
-  /* Internal ambient light pulse */
   .dialog-panel::after {
     content: "";
     position: absolute;
@@ -1335,7 +1154,6 @@
     pointer-events: none;
   }
 
-  /* Type button — active glow ring */
   .type-btn-active {
     border-color: rgba(34, 211, 238, 0.35) !important;
     background: rgba(34, 211, 238, 0.08) !important;
@@ -1344,7 +1162,6 @@
       inset 0 0 8px rgba(34, 211, 238, 0.04);
   }
 
-  /* ── Rotating conic border for active items ── */
   .border-glow-active {
     position: relative;
   }
@@ -1373,7 +1190,7 @@
   }
 
   /* ══════════════════════════════════════════════════════════════
-     GLASS UTILITIES (compatibility)
+     GLASS UTILITIES
   ══════════════════════════════════════════════════════════════ */
 
   .glass {
@@ -1468,7 +1285,6 @@
     border-radius: 3px;
   }
 
-  /* Table active row fiber */
   .table-row-active::after {
     content: "";
     position: absolute;
@@ -1481,7 +1297,6 @@
     border-radius: 0 1px 1px 0;
   }
 
-  /* Calendar today ring */
   .calendar-today::after {
     content: "";
     position: absolute;
@@ -1492,7 +1307,6 @@
     pointer-events: none;
   }
 
-  /* Panel sharp */
   .panel-sharp {
     position: relative;
     background:
@@ -1506,9 +1320,22 @@
       0 0 0 1px rgba(0, 0, 0, 0.6),
       0 20px 60px rgba(0, 0, 0, 0.5);
   }
-}
 
-.active-finance {
-  border-color: rgba(52, 211, 153, 0.3);
-  background: rgba(52, 211, 153, 0.1);
+  /* ✅ FIX: sidebar-edge-wire nếu dùng trong Sidebar.tsx */
+  .sidebar-edge-wire {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(34, 211, 238, 0.15) 30%,
+      rgba(168, 85, 247, 0.1) 60%,
+      transparent 100%
+    );
+    pointer-events: none;
+    z-index: 10;
+  }
 }

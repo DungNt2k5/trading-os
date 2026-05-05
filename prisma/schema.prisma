@@ -87,3 +87,41 @@ model EmailEvent {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model Campaign {
+  id          String            @id @default(cuid())
+  name        String
+  exchange    String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  createdAt   DateTime          @default(now())
+  tiers       CampaignTier[]
+  accounts    CampaignAccount[]
+}
+
+model CampaignTier {
+  id             String   @id @default(cuid())
+  campaignId     String
+  label          String?
+  minDeposit     Float
+  requiredVolume Float
+  holdTime       Int
+  bonus          Float
+  maxSlots       Int?
+  campaign       Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+}
+
+model CampaignAccount {
+  id          String    @id @default(cuid())
+  campaignId  String
+  email       String
+  uid         String
+  wallet      String
+  deposit     Float     @default(0)
+  depositTime DateTime?
+  volume      Float     @default(0)
+  note        String?
+  createdAt   DateTime  @default(now())
+  campaign    Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+}

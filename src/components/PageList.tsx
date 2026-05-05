@@ -30,6 +30,8 @@ const PAGE_ICON: Record<string, React.ReactNode> = {
   expense: <Landmark size={12} className="text-pink-400/60 shrink-0" />,
   general: <StickyNote size={12} className="text-purple-400/60 shrink-0" />,
   custom: <LayoutGrid size={12} className="text-yellow-400/60 shrink-0" />,
+  // ✅ FIX: Thêm finance icon
+  finance: <TrendingUp size={12} className="text-emerald-400/60 shrink-0" />,
 };
 
 const ACTIVE_STYLE: Record<
@@ -75,6 +77,15 @@ const ACTIVE_STYLE: Record<
     fiberClass: "fiber-general",
     headerGlow: "rgba(250,204,21,0.06)",
   },
+  // ✅ FIX: Thêm finance style — emerald/green như Sidebar
+  finance: {
+    border: "border-emerald-500/30",
+    bg: "bg-emerald-500/10",
+    dot: "bg-emerald-400 shadow-[0_0_5px_2px_rgba(52,211,153,0.6)]",
+    glow: "rgba(52,211,153,0.12)",
+    fiberClass: "fiber-finance",
+    headerGlow: "rgba(52,211,153,0.08)",
+  },
 };
 
 // ── Status Badge: ĐỦ 5 trạng thái ────────────────────────────────────────────
@@ -110,7 +121,6 @@ const STATUS_BADGE: Record<
   },
 };
 
-// Cycle đủ 5 trạng thái theo thứ tự logic
 const STATUS_ORDER = ["active", "in-progress", "done", "draft", "archived"];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -323,7 +333,7 @@ function ExpensePreview({
   );
 }
 
-// ── General preview ───────────────────────────────────────────────────────────
+// ── General / Finance preview ─────────────────────────────────────────────────
 
 function GeneralPreview({
   page,
@@ -379,6 +389,7 @@ export default function PageList() {
 
   const activeSection = sections.find((s) => s.id === activeSectionId);
   const type = activeSection?.type ?? "general";
+  // ✅ FIX: finance giờ có trong ACTIVE_STYLE nên không fallback về general nữa
   const style = ACTIVE_STYLE[type] ?? ACTIVE_STYLE.general;
 
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -482,7 +493,6 @@ export default function PageList() {
     setRenamingId(null);
   };
 
-  // Cycle đủ 5 trạng thái
   const handleStatusCycle = async (
     id: string,
     current: string,
@@ -564,7 +574,6 @@ export default function PageList() {
         {sectionPages.map((page, i) => {
           const isActive = activePageId === page.id;
           const isRenaming = renamingId === page.id;
-          // Fallback về active nếu status không nhận ra
           const statusKey = STATUS_BADGE[page.status] ? page.status : "active";
           const statusBadge = STATUS_BADGE[statusKey];
           const isNew = !seenIds.has(page.id);
@@ -617,6 +626,7 @@ export default function PageList() {
                     {page.icon}
                   </span>
                 ) : (
+                  // ✅ FIX: finance giờ có PAGE_ICON riêng
                   (PAGE_ICON[type] ?? PAGE_ICON.general)
                 )}
 
@@ -654,7 +664,7 @@ export default function PageList() {
                 )}
               </div>
 
-              {/* Row 2: Status badge — click để cycle qua 5 trạng thái */}
+              {/* Row 2: Status badge */}
               <div className="flex items-center gap-1.5 mt-1 ml-4 min-w-0">
                 <button
                   onClick={(e) => handleStatusCycle(page.id, page.status, e)}
@@ -672,9 +682,10 @@ export default function PageList() {
               {/* Row 3: Preview strip theo loại section */}
               {type === "trading" && <TradingPreview page={page} />}
               {type === "expense" && <ExpensePreview page={page} />}
-              {(type === "general" || type === "custom") && (
-                <GeneralPreview page={page} />
-              )}
+              {/* ✅ FIX: finance dùng GeneralPreview (tags + date) */}
+              {(type === "general" ||
+                type === "custom" ||
+                type === "finance") && <GeneralPreview page={page} />}
             </div>
           );
         })}

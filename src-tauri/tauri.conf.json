@@ -12,6 +12,7 @@
   "app": {
     "windows": [
       {
+        "dragDropEnabled": false,
         "title": "Trading OS",
         "width": 1400,
         "height": 900,

@@ -10,17 +10,9 @@ import KanbanView from "@/components/views/KanbanView";
 import CalendarView from "@/components/views/CalendarView";
 import GalleryView from "@/components/views/GalleryView";
 import FinanceDashboard from "@/components/FinanceDashboard";
+import { WelcomeScreen } from "@/components/WelcomeScreen";
 
-import {
-  Zap,
-  CandlestickChart,
-  StickyNote,
-  LayoutGrid,
-  Table2,
-  Kanban,
-  Calendar,
-  Image,
-} from "lucide-react";
+import { LayoutGrid, Table2, Kanban, Calendar, Image } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -49,7 +41,6 @@ function ViewSwitcher({
   sectionType: string;
 }) {
   const tabs = VIEW_TABS.filter((t) => {
-    // Hide dashboard tab for general/custom sections
     if (t.id === "dashboard" && !HAS_DASHBOARD.includes(sectionType))
       return false;
     return true;
@@ -106,56 +97,6 @@ function ViewSwitcher({
   );
 }
 
-// ── Welcome screen ────────────────────────────────────────────────────────────
-
-function WelcomeScreen() {
-  return (
-    <div className="flex-1 flex items-center justify-center h-full">
-      <div className="text-center space-y-5 max-w-sm px-6">
-        <div
-          className="mx-auto w-14 h-14 rounded-2xl flex items-center justify-center
-          bg-gradient-to-br from-cyan-500/20 to-purple-500/20
-          border border-white/10"
-        >
-          <Zap size={26} className="text-cyan-400" />
-        </div>
-
-        <div className="space-y-2">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-            Chào mừng đến Personal OS
-          </h2>
-          <p className="text-white/30 text-sm leading-relaxed">
-            Chọn hoặc tạo section ở sidebar để bắt đầu
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-2 pt-2">
-          {[
-            {
-              icon: <CandlestickChart size={13} />,
-              color: "text-cyan-400",
-              text: "Trading — theo dõi PnL, equity curve",
-            },
-            {
-              icon: <StickyNote size={13} />,
-              color: "text-purple-400",
-              text: "Notes — ghi chú kiểu Notion",
-            },
-          ].map((hint, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06]"
-            >
-              <span className={hint.color}>{hint.icon}</span>
-              <span className="text-xs text-white/35">{hint.text}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 export default function Home() {
@@ -163,17 +104,13 @@ export default function Home() {
   const active = sections.find((s) => s.id === activeSectionId);
   const sectionType = active?.type ?? "general";
 
-  // Default view: dashboard for trading/expense, table for others
   const defaultView: ViewMode = HAS_DASHBOARD.includes(sectionType)
     ? "dashboard"
     : "table";
 
   const [viewMode, setViewMode] = useState<ViewMode>(defaultView);
 
-  // Reset view when section changes to a sensible default
-  // (track via key on outer wrapper)
-
-  // No section selected
+  // No section selected → cyberpunk welcome
   if (!activeSectionId || !active) {
     return <WelcomeScreen />;
   }
@@ -205,7 +142,6 @@ export default function Home() {
   };
 
   return (
-    // key={activeSectionId} resets local state (viewMode) when section changes
     <div
       key={activeSectionId}
       style={{

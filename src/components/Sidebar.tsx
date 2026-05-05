@@ -18,7 +18,9 @@ import {
   Sun,
   Moon,
   TrendingUp,
+  Swords,
 } from "lucide-react";
+import Link from "next/link";
 
 // ── Type config ───────────────────────────────────────────────────────────────
 const typeConfig: Record<
@@ -422,12 +424,12 @@ export default function Sidebar() {
           )}
         >
           {!collapsed ? (
-            /* === LOGO: sidebar mở rộng === */
-            <div className="flex items-center gap-2.5 min-w-0">
+            /* === LOGO: sidebar mở rộng — click về trang chủ === */
+            <Link href="/" className="flex items-center gap-2.5 min-w-0 group" style={{ textDecoration: "none" }}>
               <img
                 src="/221617.gif"
                 alt="logo"
-                className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+                className="w-10 h-10 rounded-lg object-cover flex-shrink-0 transition-transform group-hover:scale-105"
                 style={{
                   boxShadow:
                     "0 0 12px rgba(34,211,238,0.35), 0 0 24px rgba(168,85,247,0.2)",
@@ -441,18 +443,20 @@ export default function Sidebar() {
                   Offline Knowledge Dashboard
                 </p>
               </div>
-            </div>
+            </Link>
           ) : (
-            /* === LOGO: sidebar thu nhỏ === */
-            <img
-              src="/221617.gif"
-              alt="logo"
-              className="w-8 h-8 rounded-lg object-cover"
-              style={{
-                boxShadow:
-                  "0 0 10px rgba(34,211,238,0.3), 0 0 20px rgba(168,85,247,0.15)",
-              }}
-            />
+            /* === LOGO: sidebar thu nhỏ — click về trang chủ === */
+            <Link href="/" title="Về trang chủ">
+              <img
+                src="/221617.gif"
+                alt="logo"
+                className="w-8 h-8 rounded-lg object-cover transition-transform hover:scale-110"
+                style={{
+                  boxShadow:
+                    "0 0 10px rgba(34,211,238,0.3), 0 0 20px rgba(168,85,247,0.15)",
+                }}
+              />
+            </Link>
           )}
         </div>
 
@@ -578,6 +582,21 @@ export default function Sidebar() {
 
         {/* Bottom actions */}
         <div className="border-t border-white/10 flex flex-col gap-1 p-2">
+
+          {/* Chiến dịch kèo nav link — icon Swords, label gọn */}
+          <a
+            href="/campaign"
+            style={{ textDecoration: "none" }}
+            className={cn(
+              "flex items-center gap-2.5 rounded-lg transition-all text-white/40 hover:text-orange-400 hover:bg-orange-400/10",
+              collapsed ? "justify-center p-2" : "px-3 py-2",
+            )}
+            title="Chiến dịch kèo"
+          >
+            <Swords size={14} className="flex-shrink-0" />
+            {!collapsed && <span className="text-sm">Chiến dịch</span>}
+          </a>
+
           <button
             onClick={toggleTheme}
             title={theme === "dark" ? "Chuyển Light mode" : "Chuyển Dark mode"}
